@@ -45,6 +45,9 @@ class Character(Base):
     # Relationships
     user = relationship("User", back_populates="characters")
     eve_token = relationship("EveToken", foreign_keys="EveToken.character_id", primaryjoin="Character.character_id == EveToken.character_id", uselist=False)
+    mails = relationship("Mail", back_populates="character", cascade="all, delete-orphan")
+    mail_labels = relationship("MailLabel", back_populates="character", cascade="all, delete-orphan")
+    mailing_lists = relationship("MailingList", back_populates="character", cascade="all, delete-orphan")
     
     def __repr__(self):
         return f"<Character(id={self.id}, character_id={self.character_id}, character_name='{self.character_name}')>"

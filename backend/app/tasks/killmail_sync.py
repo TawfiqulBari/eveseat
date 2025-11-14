@@ -19,6 +19,7 @@ from app.models.eve_token import EveToken
 from app.models.character import Character
 from app.services.esi_client import esi_client, ESIError, ESIRateLimitError
 from app.core.config import settings
+from app.websockets.publisher import event_publisher
 
 logger = logging.getLogger(__name__)
 
@@ -129,7 +130,24 @@ def sync_killmails_from_esi(self):
                     
                     db.add(killmail)
                     synced_count += 1
-                
+
+                    # Publish WebSocket event for new killmail
+                    try:
+                        event_publisher.publish_killmail(
+                            killmail_id=killmail_id,
+                            killmail_data={
+                                "killmail_hash": killmail_hash,
+                                "victim_character_id": victim.get("character_id"),
+                                "victim_ship_type_id": victim.get("ship_type_id"),
+                                "solar_system_id": full_killmail.get("solar_system_id"),
+                                "killmail_time": full_killmail.get("killmail_time"),
+                                "attackers_count": len(attackers),
+                                "total_value": total_value,
+                            },
+                        )
+                    except Exception as e:
+                        logger.warning(f"Failed to publish WebSocket event for killmail {killmail_id}: {e}")
+
                 db.commit()
                 logger.info(f"Synced {synced_count} killmails for character {token.character_id}")
                 
@@ -226,7 +244,24 @@ def sync_killmail_from_zkillboard(killmail_id: int, killmail_hash: str = None):
         
         db.add(killmail)
         db.commit()
-        
+
+        # Publish WebSocket event for new killmail
+        try:
+            event_publisher.publish_killmail(
+                killmail_id=killmail_id,
+                killmail_data={
+                    "killmail_hash": killmail_hash,
+                    "victim_character_id": victim.get("character_id"),
+                    "victim_ship_type_id": victim.get("ship_type_id"),
+                    "solar_system_id": full_killmail.get("solar_system_id"),
+                    "killmail_time": full_killmail.get("killmail_time"),
+                    "attackers_count": len(attackers),
+                    "total_value": 0,
+                },
+            )
+        except Exception as e:
+            logger.warning(f"Failed to publish WebSocket event for killmail {killmail_id}: {e}")
+
         logger.info(f"Synced killmail {killmail_id} from zKillboard")
         return {"success": True, "killmail_id": killmail_id}
         

@@ -48,6 +48,7 @@ class Settings(BaseSettings):
         # Character assets and wallet
         "esi-assets.read_assets.v1",  # Personal character assets
         "esi-characters.read_wallet.v1",  # Personal wallet
+        "esi-wallet.read_character_wallet.v1",  # Detailed wallet transactions
         # Character location and ship
         "esi-location.read_location.v1",
         "esi-characters.read_ship_type.v1",
@@ -68,6 +69,35 @@ class Settings(BaseSettings):
         "esi-universe.read_structures.v1",
         # Fleets
         "esi-fleets.read_fleet.v1",
+        # Mail
+        "esi-mail.read_mail.v1",
+        "esi-mail.send_mail.v1",
+        "esi-mail.organize_mail.v1",
+        # Contacts
+        "esi-characters.read_contacts.v1",
+        "esi-characters.write_contacts.v1",
+        # Calendar
+        "esi-calendar.read_calendar_events.v1",
+        "esi-calendar.respond_calendar_events.v1",
+        # Contracts
+        "esi-contracts.read_character_contracts.v1",
+        "esi-contracts.read_corporation_contracts.v1",
+        # Clones
+        "esi-clones.read_clones.v1",
+        "esi-clones.read_implants.v1",
+        # Bookmarks
+        "esi-bookmarks.read_character_bookmarks.v1",
+        # Industry
+        "esi-industry.read_character_jobs.v1",
+        "esi-industry.read_corporation_jobs.v1",
+        # Planets
+        "esi-planets.manage_planets.v1",
+        "esi-planets.read_customs_offices.v1",
+        # Fittings
+        "esi-fittings.read_fittings.v1",
+        "esi-fittings.write_fittings.v1",
+        # Search
+        "esi-search.search_structures.v1",
     ]
     
     class Config:
