@@ -61,7 +61,16 @@ class Character(Base):
     blueprints = relationship("Blueprint", back_populates="character", cascade="all, delete-orphan")
     planets = relationship("Planet", back_populates="character", cascade="all, delete-orphan")
     loyalty_points = relationship("LoyaltyPoint", back_populates="character", cascade="all, delete-orphan")
-    
+    # Phase 4 relationships
+    fittings = relationship("Fitting", back_populates="character", cascade="all, delete-orphan")
+    skills = relationship("Skill", back_populates="character", cascade="all, delete-orphan")
+    skill_queue = relationship("SkillQueue", back_populates="character", cascade="all, delete-orphan")
+    skill_plans = relationship("SkillPlan", back_populates="character", cascade="all, delete-orphan")
+    clones = relationship("Clone", back_populates="character", cascade="all, delete-orphan")
+    active_implants = relationship("ActiveImplant", back_populates="character", cascade="all, delete-orphan")
+    bookmarks = relationship("Bookmark", back_populates="character", cascade="all, delete-orphan")
+    bookmark_folders = relationship("BookmarkFolder", back_populates="character", cascade="all, delete-orphan")
+
     def __repr__(self):
         return f"<Character(id={self.id}, character_id={self.character_id}, character_name='{self.character_name}')>"
 

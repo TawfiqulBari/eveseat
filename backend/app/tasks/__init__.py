@@ -35,6 +35,10 @@ from app.tasks.industry_sync import sync_character_industry
 from app.tasks.blueprint_sync import sync_character_blueprints
 from app.tasks.planetary_sync import sync_character_planets
 from app.tasks.loyalty_sync import sync_character_loyalty
+from app.tasks.fitting_sync import sync_character_fittings
+from app.tasks.skill_sync import sync_character_skills
+from app.tasks.clone_sync import sync_character_clones
+from app.tasks.bookmark_sync import sync_character_bookmarks
 
 # Import all tasks to ensure they're registered
 __all__ = [
@@ -64,6 +68,10 @@ __all__ = [
     "sync_character_blueprints",
     "sync_character_planets",
     "sync_character_loyalty",
+    "sync_character_fittings",
+    "sync_character_skills",
+    "sync_character_clones",
+    "sync_character_bookmarks",
 ]
 
 # Celery Beat schedule configuration

@@ -27,6 +27,10 @@ const navigation = [
   { name: 'Blueprints', path: '/blueprints', icon: '📐' },
   { name: 'Planetary', path: '/planetary', icon: '🌍' },
   { name: 'Loyalty', path: '/loyalty', icon: '⭐' },
+  { name: 'Fittings', path: '/fittings', icon: '⚙️' },
+  { name: 'Skills', path: '/skills', icon: '📚' },
+  { name: 'Clones', path: '/clones', icon: '👤' },
+  { name: 'Bookmarks', path: '/bookmarks', icon: '🔖' },
 ]
 
 export const Layout: React.FC<LayoutProps> = ({ children }) => {

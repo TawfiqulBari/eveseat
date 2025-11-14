@@ -19,6 +19,10 @@ const Industry = lazy(() => import('./pages/Industry'))
 const Blueprints = lazy(() => import('./pages/Blueprints'))
 const Planetary = lazy(() => import('./pages/Planetary'))
 const Loyalty = lazy(() => import('./pages/Loyalty'))
+const Fittings = lazy(() => import('./pages/Fittings'))
+const Skills = lazy(() => import('./pages/Skills'))
+const Clones = lazy(() => import('./pages/Clones'))
+const Bookmarks = lazy(() => import('./pages/Bookmarks'))
 const Login = lazy(() => import('./pages/Login'))
 const Callback = lazy(() => import('./pages/Callback'))
 
@@ -69,6 +73,10 @@ function ProtectedRoutes() {
         <Route path="/blueprints" element={<Blueprints />} />
         <Route path="/planetary" element={<Planetary />} />
         <Route path="/loyalty" element={<Loyalty />} />
+        <Route path="/fittings" element={<Fittings />} />
+        <Route path="/skills" element={<Skills />} />
+        <Route path="/clones" element={<Clones />} />
+        <Route path="/bookmarks" element={<Bookmarks />} />
       </Routes>
     </Layout>
   )
