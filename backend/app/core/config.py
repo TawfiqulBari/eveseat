@@ -90,9 +90,13 @@ class Settings(BaseSettings):
         # Industry
         "esi-industry.read_character_jobs.v1",
         "esi-industry.read_corporation_jobs.v1",
+        # Blueprints
+        "esi-characters.read_blueprints.v1",
         # Planets
         "esi-planets.manage_planets.v1",
         "esi-planets.read_customs_offices.v1",
+        # Loyalty Points
+        "esi-characters.read_loyalty.v1",
         # Fittings
         "esi-fittings.read_fittings.v1",
         "esi-fittings.write_fittings.v1",

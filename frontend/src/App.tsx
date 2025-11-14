@@ -11,6 +11,10 @@ const Killmails = lazy(() => import('./pages/Killmails'))
 const Corporations = lazy(() => import('./pages/Corporations'))
 const Market = lazy(() => import('./pages/Market'))
 const Fleets = lazy(() => import('./pages/Fleets'))
+const Wallet = lazy(() => import('./pages/Wallet'))
+const Contracts = lazy(() => import('./pages/Contracts'))
+const Contacts = lazy(() => import('./pages/Contacts'))
+const Calendar = lazy(() => import('./pages/Calendar'))
 const Login = lazy(() => import('./pages/Login'))
 const Callback = lazy(() => import('./pages/Callback'))
 
@@ -53,6 +57,10 @@ function ProtectedRoutes() {
         <Route path="/corporations" element={<Corporations />} />
         <Route path="/market" element={<Market />} />
         <Route path="/fleets" element={<Fleets />} />
+        <Route path="/wallet" element={<Wallet />} />
+        <Route path="/contracts" element={<Contracts />} />
+        <Route path="/contacts" element={<Contacts />} />
+        <Route path="/calendar" element={<Calendar />} />
       </Routes>
     </Layout>
   )

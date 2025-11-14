@@ -60,6 +60,14 @@ class EventType(str, Enum):
 
     INDUSTRY_JOB_START = "industry.job.start"
     INDUSTRY_JOB_COMPLETE = "industry.job.complete"
+    INDUSTRY_JOB_UPDATE = "industry.job.update"
+
+    BLUEPRINT_UPDATE = "blueprint.update"
+
+    PLANETARY_UPDATE = "planetary.update"
+    PLANETARY_EXTRACTION_EXPIRE = "planetary.extraction.expire"
+
+    LOYALTY_UPDATE = "loyalty.update"
 
     WALLET_TRANSACTION = "wallet.transaction"
     WALLET_JOURNAL = "wallet.journal"
@@ -88,6 +96,9 @@ class Topic(str, Enum):
     CORPORATION = "corporation"
     CONTRACTS = "contracts"
     INDUSTRY = "industry"
+    BLUEPRINTS = "blueprints"
+    PLANETARY = "planetary"
+    LOYALTY = "loyalty"
     WALLET = "wallet"
     SYNC_STATUS = "sync.status"
 

@@ -54,6 +54,13 @@ class Character(Base):
     contracts = relationship("Contract", back_populates="character", cascade="all, delete-orphan", foreign_keys="Contract.character_id")
     wallet_journal = relationship("WalletJournal", back_populates="character", cascade="all, delete-orphan")
     wallet_transactions = relationship("WalletTransaction", back_populates="character", cascade="all, delete-orphan")
+    # Phase 3 relationships
+    industry_jobs = relationship("IndustryJob", back_populates="character", cascade="all, delete-orphan")
+    industry_facilities = relationship("IndustryFacility", back_populates="character", cascade="all, delete-orphan")
+    industry_activities = relationship("IndustryActivity", back_populates="character", cascade="all, delete-orphan")
+    blueprints = relationship("Blueprint", back_populates="character", cascade="all, delete-orphan")
+    planets = relationship("Planet", back_populates="character", cascade="all, delete-orphan")
+    loyalty_points = relationship("LoyaltyPoint", back_populates="character", cascade="all, delete-orphan")
     
     def __repr__(self):
         return f"<Character(id={self.id}, character_id={self.character_id}, character_name='{self.character_name}')>"
