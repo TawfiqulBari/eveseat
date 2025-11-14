@@ -72,6 +72,21 @@ class EventType(str, Enum):
     WALLET_TRANSACTION = "wallet.transaction"
     WALLET_JOURNAL = "wallet.journal"
 
+    FITTING_UPDATE = "fitting.update"
+    FITTING_DELETE = "fitting.delete"
+
+    SKILL_UPDATE = "skill.update"
+    SKILL_QUEUE_UPDATE = "skill.queue.update"
+    SKILL_TRAINING_COMPLETE = "skill.training.complete"
+
+    CLONE_UPDATE = "clone.update"
+    IMPLANT_UPDATE = "implant.update"
+
+    BOOKMARK_NEW = "bookmark.new"
+    BOOKMARK_UPDATE = "bookmark.update"
+    BOOKMARK_DELETE = "bookmark.delete"
+    BOOKMARK_FOLDER_UPDATE = "bookmark.folder.update"
+
     # Sync status events
     SYNC_START = "sync.start"
     SYNC_PROGRESS = "sync.progress"
@@ -100,6 +115,10 @@ class Topic(str, Enum):
     PLANETARY = "planetary"
     LOYALTY = "loyalty"
     WALLET = "wallet"
+    FITTINGS = "fittings"
+    SKILLS = "skills"
+    CLONES = "clones"
+    BOOKMARKS = "bookmarks"
     SYNC_STATUS = "sync.status"
 
     # Admin topics (admin auth required)
