@@ -444,33 +444,7 @@ def sync_character_details(self, character_id: int):
             except ESIError as e:
                 logger.warning(f"Failed to fetch alliance info: {e}")
         
-        # Fetch contacts
-        if "esi-characters.read_contacts.v1" in token.scope:
-            try:
-                contacts = run_async(
-                    esi_client.request(
-                        "GET",
-                        f"/characters/{character_id}/contacts/",
-                        access_token=access_token,
-                    )
-                )
-                character_details["contacts"] = contacts
-            except ESIError as e:
-                logger.warning(f"Failed to fetch contacts: {e}")
-        
-        # Fetch standings
-        if "esi-characters.read_standings.v1" in token.scope:
-            try:
-                standings = run_async(
-                    esi_client.request(
-                        "GET",
-                        f"/characters/{character_id}/standings/",
-                        access_token=access_token,
-                    )
-                )
-                character_details["standings"] = standings
-            except ESIError as e:
-                logger.warning(f"Failed to fetch standings: {e}")
+        # Note: Removed contacts and standings as those scopes may not be valid
         
         # Fetch wallet balance
         if "esi-characters.read_wallet.v1" in token.scope:

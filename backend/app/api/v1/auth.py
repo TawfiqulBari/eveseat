@@ -185,6 +185,21 @@ async def callback(
         
         db.commit()
         
+        # Trigger character sync tasks in the background
+        try:
+            from app.tasks.character_sync import (
+                sync_character_assets,
+                sync_character_market_orders,
+                sync_character_details,
+            )
+            # Queue sync tasks (they'll run asynchronously)
+            sync_character_assets.delay(character_id)
+            sync_character_market_orders.delay(character_id)
+            sync_character_details.delay(character_id)
+            logger.info(f"Queued character sync tasks for character {character_id}")
+        except Exception as e:
+            logger.warning(f"Failed to queue character sync tasks: {e}")
+        
         # Redirect to frontend with success
         return RedirectResponse(
             url=f"{settings.ALLOWED_ORIGINS}/auth/callback?success=true&character_id={character_id}"
