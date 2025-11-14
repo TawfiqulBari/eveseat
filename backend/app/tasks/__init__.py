@@ -27,6 +27,10 @@ from app.tasks.mail_sync import (
     sync_character_mail,
     send_mail_task,
 )
+from app.tasks.contact_sync import sync_character_contacts
+from app.tasks.calendar_sync import sync_character_calendar, respond_to_event_task
+from app.tasks.contract_sync import sync_character_contracts
+from app.tasks.wallet_sync import sync_character_wallet
 
 # Import all tasks to ensure they're registered
 __all__ = [
@@ -47,6 +51,11 @@ __all__ = [
     "sync_character_details",
     "sync_character_mail",
     "send_mail_task",
+    "sync_character_contacts",
+    "sync_character_calendar",
+    "respond_to_event_task",
+    "sync_character_contracts",
+    "sync_character_wallet",
 ]
 
 # Celery Beat schedule configuration

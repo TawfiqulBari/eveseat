@@ -48,6 +48,12 @@ class Character(Base):
     mails = relationship("Mail", back_populates="character", cascade="all, delete-orphan")
     mail_labels = relationship("MailLabel", back_populates="character", cascade="all, delete-orphan")
     mailing_lists = relationship("MailingList", back_populates="character", cascade="all, delete-orphan")
+    contacts = relationship("Contact", back_populates="character", cascade="all, delete-orphan")
+    contact_labels = relationship("ContactLabel", back_populates="character", cascade="all, delete-orphan")
+    calendar_events = relationship("CalendarEvent", back_populates="character", cascade="all, delete-orphan")
+    contracts = relationship("Contract", back_populates="character", cascade="all, delete-orphan", foreign_keys="Contract.character_id")
+    wallet_journal = relationship("WalletJournal", back_populates="character", cascade="all, delete-orphan")
+    wallet_transactions = relationship("WalletTransaction", back_populates="character", cascade="all, delete-orphan")
     
     def __repr__(self):
         return f"<Character(id={self.id}, character_id={self.character_id}, character_name='{self.character_name}')>"
