@@ -27,6 +27,12 @@ This is an EVE Online management platform designed as a Docker-based, multi-tena
 - **Planetary Interaction**: Colony management with pin tracking and extraction monitoring
 - **Loyalty Points**: LP balance tracking across all corporations with top corporation rankings
 
+### Advanced Features (Phase 4 - COMPLETE)
+- **Ship Fittings**: Ship fitting management with module tracking and detailed item breakdown
+- **Skills**: Character skills tracking, skill queue monitoring, and skillpoint statistics
+- **Jump Clones**: Jump clone management with implant tracking and clone history
+- **Bookmarks**: Location bookmarks with folder organization and coordinate tracking
+
 ### Real-time Features
 - WebSocket server for live data updates across all features
 - Redis pub/sub for scalable multi-server deployment
