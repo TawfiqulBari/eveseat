@@ -3,7 +3,7 @@ Corporation sync tasks
 
 Syncs corporation data from ESI: info, members, assets, structures
 """
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
 import logging
@@ -17,6 +17,7 @@ from app.models.corporation import (
 from app.models.eve_token import EveToken
 from app.models.character import Character
 from app.services.esi_client import esi_client, ESIError, ESIRateLimitError
+from app.services.type_cache import batch_get_type_info_cached
 from app.core.encryption import encryption
 
 logger = logging.getLogger(__name__)
@@ -51,18 +52,19 @@ def sync_corporation_data(self, corporation_id: int, character_id: int = None):
     
     try:
         # Find a token with corporation read scope
+        now = datetime.now(timezone.utc)
         if character_id:
             token = db.query(EveToken).filter(
                 and_(
                     EveToken.character_id == character_id,
-                    EveToken.expires_at > datetime.utcnow(),
+                    EveToken.expires_at > now,
                     EveToken.scope.contains("esi-corporations.read_corporation_membership.v1"),
                 )
             ).first()
         else:
             token = db.query(EveToken).filter(
                 and_(
-                    EveToken.expires_at > datetime.utcnow(),
+                    EveToken.expires_at > now,
                     EveToken.scope.contains("esi-corporations.read_corporation_membership.v1"),
                 )
             ).first()
@@ -106,7 +108,7 @@ def sync_corporation_data(self, corporation_id: int, character_id: int = None):
                     faction_id=corp_info.get("faction_id"),
                     home_station_id=corp_info.get("home_station_id"),
                     corporation_data=corp_info,
-                    last_synced_at=datetime.utcnow(),
+                    last_synced_at=datetime.now(timezone.utc),
                 )
                 db.add(corporation)
                 db.flush()
@@ -123,7 +125,7 @@ def sync_corporation_data(self, corporation_id: int, character_id: int = None):
                 corporation.faction_id = corp_info.get("faction_id")
                 corporation.home_station_id = corp_info.get("home_station_id")
                 corporation.corporation_data = corp_info
-                corporation.last_synced_at = datetime.utcnow()
+                corporation.last_synced_at = datetime.now(timezone.utc)
             
             db.commit()
             logger.info(f"Synced corporation info for {corporation_id}")
@@ -176,7 +178,7 @@ def sync_corporation_data(self, corporation_id: int, character_id: int = None):
                             roles_at_base=roles_data.get("roles_at_base", []),
                             roles_at_other=roles_data.get("roles_at_other", []),
                             member_data=roles_data,
-                            last_synced_at=datetime.utcnow(),
+                            last_synced_at=datetime.now(timezone.utc),
                         )
                         db.add(member)
                     else:
@@ -186,7 +188,7 @@ def sync_corporation_data(self, corporation_id: int, character_id: int = None):
                         member.roles_at_base = roles_data.get("roles_at_base", [])
                         member.roles_at_other = roles_data.get("roles_at_other", [])
                         member.member_data = roles_data
-                        member.last_synced_at = datetime.utcnow()
+                        member.last_synced_at = datetime.now(timezone.utc)
                     
                 except ESIError as e:
                     logger.warning(f"Failed to get roles for member {member_char_id}: {e}")
@@ -209,29 +211,82 @@ def sync_corporation_data(self, corporation_id: int, character_id: int = None):
                 )
             )
             
+            # Collect unique type_ids and location_ids for batch fetching
+            unique_type_ids = set()
+            unique_location_ids = set()
+            
+            for asset in assets_data:
+                type_id = asset.get("type_id")
+                location_id = asset.get("location_id")
+                
+                if type_id:
+                    unique_type_ids.add(type_id)
+                if location_id:
+                    unique_location_ids.add(location_id)
+            
+            # Batch fetch type information (using cache)
+            type_info_map = {}
+            if unique_type_ids:
+                logger.info(f"Fetching type information for {len(unique_type_ids)} unique asset types")
+                try:
+                    type_info_map = batch_get_type_info_cached(list(unique_type_ids), db)
+                    logger.info(f"Fetched type information for {len(type_info_map)} asset types (from cache or ESI)")
+                except Exception as e:
+                    logger.warning(f"Failed to batch fetch asset type info: {e}")
+            
+            # Batch fetch location information
+            location_info_map = {}
+            if unique_location_ids:
+                logger.info(f"Fetching location information for {len(unique_location_ids)} unique asset locations")
+                for loc_id in list(unique_location_ids):
+                    try:
+                        # Use access_token for structure lookups
+                        location_info = run_async(esi_client.get_location_info(loc_id, access_token))
+                        location_info_map[loc_id] = location_info
+                    except Exception as e:
+                        logger.warning(f"Failed to fetch location info for {loc_id}: {e}")
+                        location_info_map[loc_id] = {"name": f"Location {loc_id}"}
+                logger.info(f"Fetched location information for {len(location_info_map)} asset locations")
+            
             # Clear existing assets
             db.query(CorporationAsset).filter(
                 CorporationAsset.corporation_id == corporation_id
             ).delete()
             
-            # Add new assets
+            # Add new assets with type and location names
             for asset in assets_data:
+                type_id = asset.get("type_id")
+                location_id = asset.get("location_id")
+                
+                # Get type name
+                type_name = None
+                if type_id and type_id in type_info_map:
+                    type_name = type_info_map[type_id].get("name")
+                
+                # Get location name
+                location_name = None
+                if location_id and location_id in location_info_map:
+                    loc_info = location_info_map[location_id]
+                    location_name = loc_info.get("name")
+                
                 corp_asset = CorporationAsset(
                     corporation_id=corporation_id,
-                    type_id=asset.get("type_id"),
+                    type_id=type_id,
+                    type_name=type_name,
                     quantity=asset.get("quantity", 1),
-                    location_id=asset.get("location_id"),
+                    location_id=location_id,
                     location_type=asset.get("location_type"),
+                    location_name=location_name,
                     is_singleton=asset.get("is_singleton", False),
                     item_id=asset.get("item_id"),
                     flag=asset.get("flag"),
                     asset_data=asset,
-                    last_synced_at=datetime.utcnow(),
+                    last_synced_at=datetime.now(timezone.utc),
                 )
                 db.add(corp_asset)
             
             db.commit()
-            logger.info(f"Synced {len(assets_data)} corporation assets")
+            logger.info(f"Synced {len(assets_data)} corporation assets with type and location names")
             
         except ESIError as e:
             logger.warning(f"Failed to sync corporation assets: {e}")
@@ -269,7 +324,7 @@ def sync_corporation_data(self, corporation_id: int, character_id: int = None):
                         reinforce_weekday=struct_data.get("reinforce_weekday"),
                         services=struct_data.get("services", []),
                         structure_data=struct_data,
-                        last_synced_at=datetime.utcnow(),
+                        last_synced_at=datetime.now(timezone.utc),
                     )
                     db.add(structure)
                 else:
@@ -282,7 +337,7 @@ def sync_corporation_data(self, corporation_id: int, character_id: int = None):
                     structure.reinforce_weekday=struct_data.get("reinforce_weekday")
                     structure.services=struct_data.get("services", [])
                     structure.structure_data=struct_data
-                    structure.last_synced_at=datetime.utcnow()
+                    structure.last_synced_at=datetime.now(timezone.utc)
             
             db.commit()
             logger.info(f"Synced {len(structures_data)} corporation structures")
@@ -294,7 +349,7 @@ def sync_corporation_data(self, corporation_id: int, character_id: int = None):
         return {
             "success": True,
             "corporation_id": corporation_id,
-            "synced_at": datetime.utcnow().isoformat(),
+            "synced_at": datetime.now(timezone.utc).isoformat(),
         }
         
     except Exception as e:

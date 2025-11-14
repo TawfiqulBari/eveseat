@@ -35,6 +35,7 @@ export interface CorporationAsset {
   id: number
   type_id: number
   type_name: string | null
+  type_icon_url: string | null
   quantity: number
   location_id: number | null
   location_type: string | null

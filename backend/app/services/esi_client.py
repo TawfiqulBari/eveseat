@@ -10,7 +10,7 @@ import secrets
 import time
 import asyncio
 import logging
-from typing import Optional, Dict, Any, Tuple
+from typing import Optional, Dict, Any, Tuple, List
 from urllib.parse import urlencode, parse_qs, urlparse
 from datetime import datetime, timedelta
 import redis
@@ -162,14 +162,17 @@ class ESIClient:
         Returns:
             Token response with access_token, refresh_token, expires_in, etc.
         """
+        # EVE SSO requires client credentials in Authorization header only
+        # Do NOT include client_id in the body when using Basic Auth
+        # redirect_uri must match the one used in authorization request
         data = {
             "grant_type": "authorization_code",
             "code": code,
-            "client_id": self.client_id,
             "code_verifier": code_verifier,
+            "redirect_uri": self.callback_url,
         }
         
-        # EVE SSO uses HTTP Basic Auth
+        # EVE SSO uses HTTP Basic Auth (client_id:client_secret)
         auth = (self.client_id, self.client_secret)
         
         try:
@@ -437,18 +440,198 @@ class ESIClient:
             access_token=access_token,
         )
     
+    async def get_type_info(self, type_id: int) -> Dict[str, Any]:
+        """
+        Get item type information from ESI
+        
+        Args:
+            type_id: EVE item type ID
+            
+        Returns:
+            Type information including name, description, group_id, etc.
+        """
+        return await self.request(
+            "GET",
+            f"/universe/types/{type_id}/",
+        )
+    
+    async def get_location_info(self, location_id: int, access_token: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Get location information (station or structure) from ESI
+        
+        Includes system and region information if available.
+        
+        Args:
+            location_id: Station or structure ID
+            access_token: Optional access token (required for structures)
+            
+        Returns:
+            Location information including name, system_id, system_name, region_id, region_name, etc.
+        """
+        location_info = {}
+        system_id = None
+        region_id = None
+        
+        # Try station first (locations < 70000000 are usually stations)
+        if location_id < 70000000:
+            try:
+                station_info = await self.request(
+                    "GET",
+                    f"/universe/stations/{location_id}/",
+                )
+                location_info = station_info
+                system_id = station_info.get("system_id")
+            except ESIError:
+                # If station lookup fails, try structure
+                pass
+        
+        # Try structure (locations >= 1000000000000 are structures)
+        # Structures require authentication
+        if not location_info and location_id >= 1000000000000:
+            if access_token:
+                try:
+                    structure_info = await self.request(
+                        "GET",
+                        f"/universe/structures/{location_id}/",
+                        access_token=access_token,
+                    )
+                    location_info = structure_info
+                    system_id = structure_info.get("solar_system_id")
+                except ESIError:
+                    pass
+            else:
+                # Can't fetch structure without token, return minimal info
+                return {"name": f"Structure {location_id}", "location_id": location_id}
+        
+        # If we have location info, fetch system and region names
+        if location_info and system_id:
+            try:
+                system_info = await self.get_system_info(system_id)
+                location_info["system_id"] = system_id
+                location_info["system_name"] = system_info.get("name")
+                region_id = system_info.get("region_id")
+                
+                if region_id:
+                    try:
+                        region_info = await self.get_region_info(region_id)
+                        location_info["region_id"] = region_id
+                        location_info["region_name"] = region_info.get("name")
+                    except ESIError:
+                        pass
+            except ESIError:
+                # If system lookup fails, just return what we have
+                pass
+        
+        # If we got location info, return it
+        if location_info:
+            return location_info
+        
+        # If both fail, return minimal info
+        return {"name": f"Location {location_id}", "location_id": location_id}
+    
+    async def batch_get_type_info(self, type_ids: List[int]) -> Dict[int, Dict[str, Any]]:
+        """
+        Batch fetch type information for multiple type IDs
+        
+        Args:
+            type_ids: List of type IDs to fetch
+            
+        Returns:
+            Dictionary mapping type_id to type information
+        """
+        results = {}
+        for type_id in type_ids:
+            try:
+                type_info = await self.get_type_info(type_id)
+                results[type_id] = type_info
+            except ESIError as e:
+                logger.warning(f"Failed to fetch type info for {type_id}: {e}")
+                results[type_id] = {"name": f"Type {type_id}", "type_id": type_id}
+        return results
+    
+    async def get_group_info(self, group_id: int) -> Dict[str, Any]:
+        """
+        Get item group information from ESI
+        
+        Args:
+            group_id: EVE item group ID
+            
+        Returns:
+            Group information including name, category_id, etc.
+        """
+        return await self.request(
+            "GET",
+            f"/universe/groups/{group_id}/",
+        )
+    
+    async def get_category_info(self, category_id: int) -> Dict[str, Any]:
+        """
+        Get item category information from ESI
+        
+        Args:
+            category_id: EVE item category ID
+            
+        Returns:
+            Category information including name, etc.
+        """
+        return await self.request(
+            "GET",
+            f"/universe/categories/{category_id}/",
+        )
+    
+    async def get_system_info(self, system_id: int) -> Dict[str, Any]:
+        """
+        Get system information from ESI
+        
+        Args:
+            system_id: EVE system ID
+            
+        Returns:
+            System information including name, constellation_id, region_id, etc.
+        """
+        return await self.request(
+            "GET",
+            f"/universe/systems/{system_id}/",
+        )
+    
+    async def get_region_info(self, region_id: int) -> Dict[str, Any]:
+        """
+        Get region information from ESI
+        
+        Args:
+            region_id: EVE region ID
+            
+        Returns:
+            Region information including name, etc.
+        """
+        return await self.request(
+            "GET",
+            f"/universe/regions/{region_id}/",
+        )
+    
     async def verify_token(self, access_token: str) -> Dict[str, Any]:
         """
         Verify and decode access token (JWT)
         
         Returns character information from token
         """
-        # EVE SSO tokens are JWTs, but we can also use the /verify endpoint
-        return await self.request(
-            "GET",
-            "/verify/",
-            access_token=access_token,
-        )
+        # EVE SSO verify endpoint is at the SSO URL, not ESI base URL
+        verify_url = "https://login.eveonline.com/oauth/verify"
+        
+        headers = {
+            "Authorization": f"Bearer {access_token}"
+        }
+        
+        try:
+            response = await self.client.get(verify_url, headers=headers)
+            response.raise_for_status()
+            return response.json()
+        except httpx.HTTPStatusError as e:
+            logger.error(f"Token verification failed: {e.response.text}")
+            raise ESITokenError(f"Failed to verify token: {e.response.text}")
+        except Exception as e:
+            logger.error(f"Token verification error: {e}")
+            raise ESITokenError(f"Token verification failed: {str(e)}")
     
     async def close(self):
         """Close HTTP client"""

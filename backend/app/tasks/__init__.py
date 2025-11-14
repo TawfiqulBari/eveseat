@@ -17,6 +17,12 @@ from app.tasks.market_sync import (
     sync_trade_hub_markets,
     sync_price_history,
 )
+from app.tasks.market_backfill import backfill_market_order_names
+from app.tasks.character_sync import (
+    sync_character_assets,
+    sync_character_market_orders,
+    sync_character_details,
+)
 
 # Import all tasks to ensure they're registered
 __all__ = [
@@ -31,6 +37,10 @@ __all__ = [
     "sync_market_orders",
     "sync_trade_hub_markets",
     "sync_price_history",
+    "backfill_market_order_names",
+    "sync_character_assets",
+    "sync_character_market_orders",
+    "sync_character_details",
 ]
 
 # Celery Beat schedule configuration

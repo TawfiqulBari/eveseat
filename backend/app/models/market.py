@@ -18,6 +18,9 @@ class MarketOrder(Base):
     id = Column(Integer, primary_key=True, index=True)
     order_id = Column(BigInteger, unique=True, nullable=False, index=True)  # EVE order ID
     
+    # Character ownership (for personal orders)
+    character_id = Column(BigInteger, nullable=True, index=True)  # Character who owns this order
+    
     # Order type
     type_id = Column(BigInteger, nullable=False, index=True)  # Item type ID
     type_name = Column(String(255), nullable=True)
@@ -58,6 +61,7 @@ class MarketOrder(Base):
     __table_args__ = (
         Index("idx_market_orders_type_location", "type_id", "location_id", "is_buy_order"),
         Index("idx_market_orders_region_type", "region_id", "type_id", "is_buy_order"),
+        Index("idx_market_orders_character", "character_id", "is_active"),
         Index("idx_market_orders_price", "price"),
         Index("idx_market_orders_expires", "expires"),
     )

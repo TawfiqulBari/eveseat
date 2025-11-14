@@ -42,15 +42,45 @@ class Settings(BaseSettings):
     
     # ESI Scopes
     ESI_SCOPES: List[str] = [
+        # Character information
+        "esi-characters.read_contacts.v1",
+        "esi-characters.read_standings.v1",
+        "esi-characters.read_titles.v1",
+        "esi-characters.read_blueprints.v1",
         "esi-characters.read_corporation_roles.v1",
-        "esi-corporations.read_corporation_membership.v1",
-        "esi-killmails.read_killmails.v1",
+        "esi-characters.read_corporation_membership.v1",
+        "esi-characters.read_loyalty.v1",
+        "esi-characters.read_medals.v1",
+        "esi-characters.read_fatigue.v1",
+        "esi-characters.read_opportunities.v1",
+        "esi-characters.read_notifications.v1",
+        "esi-characters.read_mail.v1",
+        "esi-characters.read_calendar.v1",
+        "esi-characters.read_chat_channels.v1",
+        "esi-characters.read_fw_stats.v1",
+        # Character assets and wallet
+        "esi-assets.read_assets.v1",  # Personal character assets
+        "esi-characters.read_wallet.v1",  # Personal wallet
+        # Character location and ship
         "esi-location.read_location.v1",
+        "esi-characters.read_online.v1",
+        "esi-characters.read_ship_type.v1",
+        # Character skills
+        "esi-characters.read_skillqueue.v1",
+        "esi-characters.read_skills.v1",
+        # Personal market orders
+        "esi-markets.read_character_orders.v1",  # Personal market orders
+        # Corporation data (if user has access)
+        "esi-corporations.read_corporation_membership.v1",
         "esi-assets.read_corporation_assets.v1",
         "esi-wallet.read_corporation_wallets.v1",
-        "esi-structures.read_structures.v1",
-        "esi-universe.read_structures.v1",
+        "esi-corporations.read_structures.v1",
         "esi-markets.read_corporation_orders.v1",
+        # Killmails
+        "esi-killmails.read_killmails.v1",
+        # Universe
+        "esi-universe.read_structures.v1",
+        # Fleets
         "esi-fleets.read_fleet.v1",
     ]
     

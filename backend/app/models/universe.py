@@ -1,7 +1,7 @@
 """
 Universe models for EVE Online map and route planning
 """
-from sqlalchemy import Column, Integer, BigInteger, Float, String, DateTime, Index, ForeignKey
+from sqlalchemy import Column, Integer, BigInteger, Float, String, DateTime, Index, ForeignKey, Text, Boolean
 from sqlalchemy.dialects.postgresql import JSONB
 from geoalchemy2 import Geometry
 from sqlalchemy.sql import func
@@ -122,4 +122,56 @@ class SystemActivity(Base):
     
     def __repr__(self):
         return f"<SystemActivity(id={self.id}, system_id={self.system_id}, timestamp='{self.timestamp}', kills={self.kills_last_hour})>"
+
+
+class UniverseType(Base):
+    """
+    Universe type cache model
+    
+    Caches item type information from ESI to reduce API calls.
+    Type information changes infrequently, so caching is very effective.
+    """
+    __tablename__ = "universe_types"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    type_id = Column(BigInteger, unique=True, nullable=False, index=True)  # EVE type ID
+    
+    # Basic type information
+    name = Column(String(255), nullable=False, index=True)
+    description = Column(Text, nullable=True)
+    
+    # Type hierarchy
+    group_id = Column(BigInteger, nullable=True, index=True)
+    group_name = Column(String(255), nullable=True)
+    category_id = Column(BigInteger, nullable=True, index=True)
+    category_name = Column(String(255), nullable=True)
+    
+    # Type metadata
+    mass = Column(Float, nullable=True)
+    volume = Column(Float, nullable=True)
+    capacity = Column(Float, nullable=True)
+    portion_size = Column(Integer, nullable=True)
+    published = Column(Boolean, default=True, nullable=False)
+    
+    # Icon and graphic information
+    icon_id = Column(Integer, nullable=True)
+    icon_url = Column(String(500), nullable=True)  # Pre-computed icon URL
+    
+    # Additional type data from ESI
+    type_data = Column(JSONB, nullable=True)  # Full ESI type response
+    
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    last_synced_at = Column(DateTime(timezone=True), nullable=True)
+    
+    # Indexes for efficient lookups
+    __table_args__ = (
+        Index("idx_universe_types_group", "group_id"),
+        Index("idx_universe_types_category", "category_id"),
+        Index("idx_universe_types_name", "name"),
+    )
+    
+    def __repr__(self):
+        return f"<UniverseType(id={self.id}, type_id={self.type_id}, name='{self.name}')>"
 

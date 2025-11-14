@@ -17,10 +17,11 @@ import { formatDistanceToNow } from 'date-fns'
 export default function Dashboard() {
   const { characterId } = useCharacter()
 
-  const { data: userInfo, isLoading: userLoading } = useQuery({
+  const { data: userInfo, isLoading: userLoading, error: userError } = useQuery({
     queryKey: ['user', characterId],
     queryFn: () => authService.getCurrentUser(characterId!),
     enabled: !!characterId && characterId > 0,
+    retry: 1,
   })
 
   const { data: characters, isLoading: charsLoading } = useQuery({
@@ -36,6 +37,24 @@ export default function Dashboard() {
   const { data: killmailStats } = useQuery({
     queryKey: ['killmail-stats', characterId],
     queryFn: () => killmailsService.getStats({ character_id: characterId || undefined, days: 30 }),
+    enabled: !!characterId && characterId > 0,
+  })
+
+  const { data: characterAssets, isLoading: assetsLoading } = useQuery({
+    queryKey: ['character-assets', characterId],
+    queryFn: () => charactersService.getAssets(characterId!),
+    enabled: !!characterId && characterId > 0,
+  })
+
+  const { data: characterMarketOrders, isLoading: ordersLoading } = useQuery({
+    queryKey: ['character-market-orders', characterId],
+    queryFn: () => charactersService.getMarketOrders(characterId!, { limit: 10 }),
+    enabled: !!characterId && characterId > 0,
+  })
+
+  const { data: characterDetails, isLoading: detailsLoading } = useQuery({
+    queryKey: ['character-details', characterId],
+    queryFn: () => charactersService.getDetails(characterId!),
     enabled: !!characterId && characterId > 0,
   })
 
@@ -96,6 +115,17 @@ export default function Dashboard() {
     )
   }
 
+  if (userError) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold text-white mb-2">Dashboard</h1>
+          <p className="text-red-400">Error loading character information. Please try logging in again.</p>
+        </div>
+      </div>
+    )
+  }
+
   const character = userInfo?.character
 
   return (
@@ -111,7 +141,7 @@ export default function Dashboard() {
           <div className="space-y-2">
             <div>
               <span className="text-gray-400">Name:</span>
-              <span className="ml-2 text-white font-medium">{character?.character_name}</span>
+              <span className="ml-2 text-white font-medium">{character?.character_name || 'Unknown'}</span>
             </div>
             {character?.corporation_name && (
               <div>
@@ -125,7 +155,7 @@ export default function Dashboard() {
                 <span className="ml-2 text-white">{character.alliance_name}</span>
               </div>
             )}
-            {character?.security_status !== null && (
+            {character?.security_status !== null && character?.security_status !== undefined && (
               <div>
                 <span className="text-gray-400">Security Status:</span>
                 <span className={`ml-2 font-medium ${formatSecurityStatus(parseFloat(character.security_status)).colorClass}`}>
@@ -226,6 +256,226 @@ export default function Dashboard() {
           </Card>
         </div>
       )}
+
+      {/* Character Details */}
+      {characterDetails && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {characterDetails.details.wallet_balance !== undefined && (
+            <Card title="Wallet Balance">
+              <div className="text-3xl font-bold text-yellow-400">
+                {formatISK(characterDetails.details.wallet_balance)}
+              </div>
+            </Card>
+          )}
+          {characterDetails.details.location && (
+            <Card title="Current Location">
+              <div className="space-y-2">
+                {characterDetails.details.location.solar_system_id && (
+                  <div>
+                    <span className="text-gray-400">System:</span>
+                    <span className="ml-2 text-white font-medium">
+                      System {characterDetails.details.location.solar_system_id}
+                    </span>
+                  </div>
+                )}
+                {characterDetails.details.location.station_id && (
+                  <div>
+                    <span className="text-gray-400">Station:</span>
+                    <span className="ml-2 text-white">
+                      Station {characterDetails.details.location.station_id}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </Card>
+          )}
+          {characterDetails.details.ship && (
+            <Card title="Current Ship">
+              <div className="space-y-2">
+                {characterDetails.details.ship.ship_type_id && (
+                  <div>
+                    <span className="text-gray-400">Ship Type:</span>
+                    <span className="ml-2 text-white">
+                      Type {characterDetails.details.ship.ship_type_id}
+                    </span>
+                  </div>
+                )}
+                {characterDetails.details.ship.ship_name && (
+                  <div>
+                    <span className="text-gray-400">Ship Name:</span>
+                    <span className="ml-2 text-white">{characterDetails.details.ship.ship_name}</span>
+                  </div>
+                )}
+              </div>
+            </Card>
+          )}
+          {characterDetails.details.skills && (
+            <Card title="Skills">
+              <div className="space-y-2">
+                <div>
+                  <span className="text-gray-400">Total SP:</span>
+                  <span className="ml-2 text-white">
+                    {characterDetails.details.skills.total_sp?.toLocaleString() || '0'}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-gray-400">Unallocated SP:</span>
+                  <span className="ml-2 text-white">
+                    {characterDetails.details.skills.unallocated_sp?.toLocaleString() || '0'}
+                  </span>
+                </div>
+              </div>
+            </Card>
+          )}
+        </div>
+      )}
+
+      {/* Personal Market Orders */}
+      <Card
+        title="My Market Orders"
+        actions={
+          characterId ? (
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => {
+                charactersService.syncMarketOrders(characterId!)
+              }}
+              disabled={ordersLoading}
+            >
+              {ordersLoading ? 'Syncing...' : 'Sync Orders'}
+            </Button>
+          ) : undefined
+        }
+      >
+        {ordersLoading ? (
+          <CardSkeleton lines={3} />
+        ) : characterMarketOrders && characterMarketOrders.items.length > 0 ? (
+          <div className="space-y-3">
+            {characterMarketOrders.items.slice(0, 5).map((order) => (
+              <div
+                key={order.id}
+                className="flex items-center justify-between p-3 bg-eve-darker rounded-lg hover:bg-eve-dark transition-colors"
+              >
+                <div className="flex items-center gap-3 flex-1">
+                  {order.type_icon_url && (
+                    <img
+                      src={order.type_icon_url}
+                      alt={order.type_name || `Type ${order.type_id}`}
+                      className="w-8 h-8 object-contain"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none'
+                      }}
+                    />
+                  )}
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-white font-medium">
+                        {order.type_name || `Type ${order.type_id}`}
+                      </span>
+                      <Badge variant={order.is_buy_order ? 'success' : 'warning'}>
+                        {order.is_buy_order ? 'Buy' : 'Sell'}
+                      </Badge>
+                      {!order.is_active && (
+                        <Badge variant="secondary">Inactive</Badge>
+                      )}
+                    </div>
+                    <div className="text-sm text-gray-400 mt-1">
+                      {order.location_name || `Location ${order.location_id}`}
+                      {order.system_name && ` • ${order.system_name}`}
+                    </div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-yellow-400 font-medium">
+                    {formatISK(order.price)}
+                  </div>
+                  <div className="text-sm text-gray-400">
+                    {order.volume_remain} / {order.volume_total}
+                  </div>
+                </div>
+              </div>
+            ))}
+            {characterMarketOrders.total > 5 && (
+              <div className="text-center pt-2 text-gray-400 text-sm">
+                Showing 5 of {characterMarketOrders.total} orders
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-gray-400">
+            No market orders found. Click "Sync Orders" to fetch your orders from EVE Online.
+          </div>
+        )}
+      </Card>
+
+      {/* Personal Assets */}
+      <Card
+        title="My Assets"
+        actions={
+          characterId ? (
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => {
+                charactersService.syncAssets(characterId!)
+              }}
+              disabled={assetsLoading}
+            >
+              {assetsLoading ? 'Syncing...' : 'Sync Assets'}
+            </Button>
+          ) : undefined
+        }
+      >
+        {assetsLoading ? (
+          <CardSkeleton lines={3} />
+        ) : characterAssets && characterAssets.assets.length > 0 ? (
+          <div className="space-y-3">
+            {characterAssets.assets.slice(0, 10).map((asset, idx) => (
+              <div
+                key={asset.item_id || idx}
+                className="flex items-center justify-between p-3 bg-eve-darker rounded-lg hover:bg-eve-dark transition-colors"
+              >
+                <div className="flex items-center gap-3 flex-1">
+                  {asset.type_icon_url && (
+                    <img
+                      src={asset.type_icon_url}
+                      alt={asset.type_name || `Type ${asset.type_id}`}
+                      className="w-8 h-8 object-contain"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none'
+                      }}
+                    />
+                  )}
+                  <div className="flex-1">
+                    <div className="text-white font-medium">
+                      {asset.type_name || `Type ${asset.type_id}`}
+                    </div>
+                    <div className="text-sm text-gray-400 mt-1">
+                      {asset.location_name || `Location ${asset.location_id}`}
+                      {asset.system_name && ` • ${asset.system_name}`}
+                    </div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-white font-medium">
+                    {asset.quantity.toLocaleString()}
+                  </div>
+                </div>
+              </div>
+            ))}
+            {characterAssets.count > 10 && (
+              <div className="text-center pt-2 text-gray-400 text-sm">
+                Showing 10 of {characterAssets.count} assets
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-gray-400">
+            No assets found. Click "Sync Assets" to fetch your assets from EVE Online.
+          </div>
+        )}
+      </Card>
 
       {/* Recent Killmails */}
       <Card

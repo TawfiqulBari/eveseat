@@ -3,7 +3,7 @@ Market sync tasks
 
 Syncs market data from ESI for major trade hubs
 """
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
 import logging
@@ -13,6 +13,7 @@ from app.core.celery_app import celery_app
 from app.core.database import SessionLocal
 from app.models.market import MarketOrder, PriceHistory
 from app.services.esi_client import esi_client, ESIError, ESIRateLimitError
+from app.services.type_cache import batch_get_type_info_cached
 
 logger = logging.getLogger(__name__)
 
@@ -68,12 +69,73 @@ def sync_market_orders(self, region_id: int, system_id: int = None):
             
             logger.info(f"Fetched {len(orders_data)} market orders for region {region_id}")
             
-            # Process orders
+            # Collect unique type_ids and location_ids for batch fetching
+            unique_type_ids = set()
+            unique_location_ids = set()
+            
+            # Process orders - first pass: collect IDs
+            orders_to_process = []
             for order_data in orders_data:
                 order_id = order_data.get("order_id")
                 
                 if not order_id:
                     continue
+                
+                type_id = order_data.get("type_id")
+                location_id = order_data.get("location_id")
+                
+                if type_id:
+                    unique_type_ids.add(type_id)
+                if location_id:
+                    unique_location_ids.add(location_id)
+                
+                orders_to_process.append(order_data)
+            
+            # Batch fetch type information (using cache)
+            type_info_map = {}
+            if unique_type_ids:
+                logger.info(f"Fetching type information for {len(unique_type_ids)} unique types")
+                try:
+                    type_info_map = batch_get_type_info_cached(list(unique_type_ids), db)
+                    logger.info(f"Fetched type information for {len(type_info_map)} types (from cache or ESI)")
+                except Exception as e:
+                    logger.warning(f"Failed to batch fetch type info: {e}")
+            
+            # Batch fetch location information
+            location_info_map = {}
+            if unique_location_ids:
+                logger.info(f"Fetching location information for {len(unique_location_ids)} unique locations")
+                for loc_id in list(unique_location_ids):
+                    try:
+                        location_info = run_async(esi_client.get_location_info(loc_id))
+                        location_info_map[loc_id] = location_info
+                    except Exception as e:
+                        logger.warning(f"Failed to fetch location info for {loc_id}: {e}")
+                        location_info_map[loc_id] = {"name": f"Location {loc_id}"}
+                logger.info(f"Fetched location information for {len(location_info_map)} locations")
+            
+            # Process orders - second pass: create/update with type and location names
+            for order_data in orders_to_process:
+                order_id = order_data.get("order_id")
+                type_id = order_data.get("type_id")
+                location_id = order_data.get("location_id")
+                
+                # Get type name
+                type_name = None
+                if type_id and type_id in type_info_map:
+                    type_name = type_info_map[type_id].get("name")
+                
+                # Get location name and system/region info
+                location_name = None
+                system_id_from_location = None
+                system_name = None
+                region_name = None
+                if location_id and location_id in location_info_map:
+                    loc_info = location_info_map[location_id]
+                    location_name = loc_info.get("name")
+                    system_id_from_location = loc_info.get("system_id") or loc_info.get("solar_system_id")
+                    system_name = loc_info.get("system_name")
+                    region_name = loc_info.get("region_name")
                 
                 # Check if order already exists
                 existing = db.query(MarketOrder).filter(
@@ -93,16 +155,32 @@ def sync_market_orders(self, region_id: int, system_id: int = None):
                     existing.range_type = order_data.get("range") if isinstance(order_data.get("range"), str) else None
                     existing.range_value = order_data.get("range") if isinstance(order_data.get("range"), int) else None
                     existing.order_data = order_data
-                    existing.last_synced_at = datetime.utcnow()
+                    existing.last_synced_at = datetime.now(timezone.utc)
+                    # Update type and location names
+                    if type_name:
+                        existing.type_name = type_name
+                    if location_name:
+                        existing.location_name = location_name
+                    if system_id_from_location:
+                        existing.system_id = system_id_from_location
+                    if system_name:
+                        existing.system_name = system_name
+                    if region_name:
+                        existing.region_name = region_name
                 else:
                     # Create new order
                     order = MarketOrder(
                         order_id=order_id,
-                        type_id=order_data.get("type_id"),
+                        type_id=type_id,
+                        type_name=type_name,
                         is_buy_order=order_data.get("is_buy_order", False),
-                        location_id=order_data.get("location_id"),
+                        location_id=location_id,
                         location_type=order_data.get("location_type"),
+                        location_name=location_name,
                         region_id=region_id,
+                        region_name=region_name,
+                        system_id=system_id_from_location,
+                        system_name=system_name,
                         price=order_data.get("price", 0),
                         volume_total=order_data.get("volume_total", 0),
                         volume_remain=order_data.get("volume_remain", 0),
@@ -114,13 +192,13 @@ def sync_market_orders(self, region_id: int, system_id: int = None):
                         range_type=order_data.get("range") if isinstance(order_data.get("range"), str) else None,
                         range_value=order_data.get("range") if isinstance(order_data.get("range"), int) else None,
                         order_data=order_data,
-                        last_synced_at=datetime.utcnow(),
+                        last_synced_at=datetime.now(timezone.utc),
                     )
                     db.add(order)
                     synced_count += 1
             
             db.commit()
-            logger.info(f"Synced {synced_count} new market orders for region {region_id}")
+            logger.info(f"Synced {synced_count} new market orders for region {region_id} with type and location names")
             
         except ESIRateLimitError as e:
             logger.warning(f"Rate limit hit for region {region_id}: {e}")

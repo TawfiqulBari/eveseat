@@ -5,13 +5,14 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, desc
 from typing import Optional, List
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pydantic import BaseModel
 import logging
 
 from app.core.database import get_db
 from app.models.market import MarketOrder, PriceHistory
 from app.tasks.market_sync import sync_market_orders, sync_price_history
+from app.tasks.market_backfill import backfill_market_order_names
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +25,7 @@ class MarketOrderResponse(BaseModel):
     order_id: int
     type_id: int
     type_name: Optional[str]
+    type_icon_url: Optional[str]  # EVE image CDN URL for item icon
     is_buy_order: bool
     location_id: int
     location_type: Optional[str]
@@ -117,8 +119,38 @@ async def get_orders(
         orders = query.offset(skip).limit(limit).all()
         total = query.count()
         
+        # Convert to response models with icon URLs
+        order_responses = []
+        for order in orders:
+            order_dict = {
+                "id": order.id,
+                "order_id": order.order_id,
+                "type_id": order.type_id,
+                "type_name": order.type_name,
+                "type_icon_url": f"https://images.evetech.net/types/{order.type_id}/icon" if order.type_id else None,
+                "is_buy_order": order.is_buy_order,
+                "location_id": order.location_id,
+                "location_type": order.location_type,
+                "location_name": order.location_name,
+                "region_id": order.region_id,
+                "region_name": order.region_name,
+                "system_id": order.system_id,
+                "system_name": order.system_name,
+                "price": order.price,
+                "volume_total": order.volume_total,
+                "volume_remain": order.volume_remain,
+                "min_volume": order.min_volume,
+                "duration": order.duration,
+                "issued": order.issued,
+                "expires": order.expires,
+                "is_active": order.is_active,
+                "range_type": order.range_type,
+                "range_value": order.range_value,
+            }
+            order_responses.append(MarketOrderResponse(**order_dict))
+        
         return {
-            "items": orders,
+            "items": order_responses,
             "total": total,
             "skip": skip,
             "limit": limit,
@@ -217,7 +249,7 @@ async def get_history(
         db: Database session
     """
     try:
-        end_date = datetime.utcnow()
+        end_date = datetime.now(timezone.utc)
         start_date = end_date - timedelta(days=days)
         
         history = db.query(PriceHistory).filter(
@@ -310,3 +342,33 @@ async def compare_prices(
     except Exception as e:
         logger.error(f"Error comparing prices: {e}")
         raise HTTPException(status_code=500, detail="Failed to compare prices")
+
+
+@router.post("/backfill")
+async def trigger_backfill(
+    batch_size: int = Query(100, ge=1, le=1000, description="Number of orders to process per batch"),
+    db: Session = Depends(get_db),
+):
+    """
+    Backfill existing market orders with type names, location names, system names, and region names
+    
+    This is useful for updating orders that were synced before the type cache and location fetching
+    enhancements were added.
+    
+    Args:
+        batch_size: Number of orders to process per batch
+        db: Database session
+    """
+    try:
+        # Queue backfill task
+        task = backfill_market_order_names.delay(batch_size)
+        
+        return {
+            "message": "Market order backfill queued",
+            "task_id": task.id,
+            "batch_size": batch_size,
+        }
+        
+    except Exception as e:
+        logger.error(f"Error queuing market backfill: {e}")
+        raise HTTPException(status_code=500, detail="Failed to queue market backfill")

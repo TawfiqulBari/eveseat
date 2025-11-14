@@ -1,5 +1,5 @@
-import { lazy, Suspense } from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { lazy, Suspense, useState, useEffect } from 'react'
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { ErrorBoundary } from './components/common/ErrorBoundary'
 import { Layout } from './components/Layout'
 import { LoadingSpinner } from './components/common/LoadingSpinner'
@@ -14,10 +14,51 @@ const Fleets = lazy(() => import('./pages/Fleets'))
 const Login = lazy(() => import('./pages/Login'))
 const Callback = lazy(() => import('./pages/Callback'))
 
-function App() {
-  // Check if user is authenticated
-  const isAuthenticated = !!localStorage.getItem('access_token')
+function ProtectedRoutes() {
+  const location = useLocation()
+  const [isAuthenticated, setIsAuthenticated] = useState(() => 
+    !!localStorage.getItem('access_token')
+  )
 
+  // Re-check authentication on location change (e.g., after callback)
+  useEffect(() => {
+    const checkAuth = () => {
+      setIsAuthenticated(!!localStorage.getItem('access_token'))
+    }
+    
+    checkAuth()
+    
+    // Listen for storage changes (in case localStorage is updated in another tab/window)
+    window.addEventListener('storage', checkAuth)
+    
+    // Also check on location change
+    const interval = setInterval(checkAuth, 100)
+    
+    return () => {
+      window.removeEventListener('storage', checkAuth)
+      clearInterval(interval)
+    }
+  }, [location])
+
+  if (!isAuthenticated) {
+    return <Login />
+  }
+
+  return (
+    <Layout>
+      <Routes>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/map" element={<Map />} />
+        <Route path="/killmails" element={<Killmails />} />
+        <Route path="/corporations" element={<Corporations />} />
+        <Route path="/market" element={<Market />} />
+        <Route path="/fleets" element={<Fleets />} />
+      </Routes>
+    </Layout>
+  )
+}
+
+function App() {
   return (
     <ErrorBoundary>
       <BrowserRouter>
@@ -32,25 +73,7 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/callback" element={<Callback />} />
             <Route path="/auth/callback" element={<Callback />} />
-            <Route
-              path="/*"
-              element={
-                isAuthenticated ? (
-                  <Layout>
-                    <Routes>
-                      <Route path="/" element={<Dashboard />} />
-                      <Route path="/map" element={<Map />} />
-                      <Route path="/killmails" element={<Killmails />} />
-                      <Route path="/corporations" element={<Corporations />} />
-                      <Route path="/market" element={<Market />} />
-                      <Route path="/fleets" element={<Fleets />} />
-                    </Routes>
-                  </Layout>
-                ) : (
-                  <Login />
-                )
-              }
-            />
+            <Route path="/*" element={<ProtectedRoutes />} />
           </Routes>
         </Suspense>
       </BrowserRouter>

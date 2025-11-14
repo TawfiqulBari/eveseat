@@ -4,7 +4,7 @@ Authentication endpoints for EVE Online SSO
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 import logging
 
@@ -326,7 +326,13 @@ async def get_current_user(
             raise HTTPException(status_code=404, detail="Token not found")
         
         # Check if token is expired
-        is_expired = eve_token.expires_at < datetime.utcnow()
+        # Use timezone-aware datetime for comparison
+        now = datetime.now(timezone.utc)
+        # Ensure expires_at is timezone-aware
+        expires_at = eve_token.expires_at
+        if expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+        is_expired = expires_at < now
         
         return {
             "user": {

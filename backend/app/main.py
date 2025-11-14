@@ -39,14 +39,15 @@ if settings.CORS_ORIGINS:
     )
 
 # Include routers
-app.include_router(auth.router, prefix="/api/v1/auth", tags=["authentication"])
-app.include_router(characters.router, prefix="/api/v1/characters", tags=["characters"])
-app.include_router(killmails.router, prefix="/api/v1/killmails", tags=["killmails"])
-app.include_router(map.router, prefix="/api/v1/map", tags=["map"])
-app.include_router(routes.router, prefix="/api/v1/routes", tags=["routes"])
-app.include_router(corporations.router, prefix="/api/v1/corporations", tags=["corporations"])
-app.include_router(market.router, prefix="/api/v1/market", tags=["market"])
-app.include_router(fleets.router, prefix="/api/v1/fleets", tags=["fleets"])
+# Note: Traefik strips /api/v1 prefix, so routers are mounted at /auth, /characters, etc.
+app.include_router(auth.router, prefix="/auth", tags=["authentication"])
+app.include_router(characters.router, prefix="/characters", tags=["characters"])
+app.include_router(killmails.router, prefix="/killmails", tags=["killmails"])
+app.include_router(map.router, prefix="/map", tags=["map"])
+app.include_router(routes.router, prefix="/routes", tags=["routes"])
+app.include_router(corporations.router, prefix="/corporations", tags=["corporations"])
+app.include_router(market.router, prefix="/market", tags=["market"])
+app.include_router(fleets.router, prefix="/fleets", tags=["fleets"])
 
 
 @app.get("/")

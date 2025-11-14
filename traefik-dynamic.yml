@@ -22,7 +22,7 @@ http:
         - redirect-to-https
     
     eve-api:
-      rule: "Host(`eveseat.tawfiqulbari.work`) && PathPrefix(`/api`)"
+      rule: "Host(`eveseat.tawfiqulbari.work`) && PathPrefix(`/api/v1`)"
       entryPoints:
         - websecure
       service: eve-api
@@ -33,7 +33,7 @@ http:
         - security-headers
     
     eve-api-http:
-      rule: "Host(`eveseat.tawfiqulbari.work`) && PathPrefix(`/api`)"
+      rule: "Host(`eveseat.tawfiqulbari.work`) && PathPrefix(`/api/v1`)"
       entryPoints:
         - web
       service: eve-api
@@ -56,7 +56,7 @@ http:
     eve-api-stripprefix:
       stripPrefix:
         prefixes:
-          - "/api"
+          - "/api/v1"
     
     redirect-to-https:
       redirectScheme:

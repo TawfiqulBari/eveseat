@@ -18,7 +18,7 @@ from app.core.database import Base
 # Import all models so Alembic can detect them
 from app.models import (
     User, EveToken, Character, Killmail,
-    System, SystemJump, SystemActivity,
+    System, SystemJump, SystemActivity, UniverseType,
     Corporation, CorporationMember, CorporationAsset, CorporationStructure,
     MarketOrder, PriceHistory,
     Fleet, FleetMember, Doctrine

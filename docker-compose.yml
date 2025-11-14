@@ -65,16 +65,16 @@ services:
     labels:
       - "traefik.enable=true"
       # HTTPS router
-      - "traefik.http.routers.eve-api.rule=Host(`eveseat.tawfiqulbari.work`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.eve-api.rule=Host(`eveseat.tawfiqulbari.work`) && PathPrefix(`/api/v1`)"
       - "traefik.http.routers.eve-api.entrypoints=websecure"
       - "traefik.http.routers.eve-api.tls=true"
       - "traefik.http.routers.eve-api.tls.certresolver=le"
       - "traefik.http.routers.eve-api.middlewares=eve-api-stripprefix,security-headers"
       # HTTP router (fallback)
-      - "traefik.http.routers.eve-api-http.rule=Host(`eveseat.tawfiqulbari.work`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.eve-api-http.rule=Host(`eveseat.tawfiqulbari.work`) && PathPrefix(`/api/v1`)"
       - "traefik.http.routers.eve-api-http.entrypoints=web"
       - "traefik.http.routers.eve-api-http.middlewares=eve-api-stripprefix,security-headers"
-      - "traefik.http.middlewares.eve-api-stripprefix.stripprefix.prefixes=/api"
+      - "traefik.http.middlewares.eve-api-stripprefix.stripprefix.prefixes=/api/v1"
       - "traefik.http.services.eve-api.loadbalancer.server.port=8000"
     restart: unless-stopped
 

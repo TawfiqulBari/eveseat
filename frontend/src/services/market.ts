@@ -5,6 +5,7 @@ export interface MarketOrder {
   order_id: number
   type_id: number
   type_name: string | null
+  type_icon_url: string | null
   is_buy_order: boolean
   location_id: number
   location_type: string | null

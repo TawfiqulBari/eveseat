@@ -127,7 +127,20 @@ export default function Corporations() {
       sortable: true,
       sortKey: (asset: CorporationAsset) => asset.type_name || `Type ${asset.type_id}`,
       render: (asset: CorporationAsset) => (
-        <span className="text-white font-medium">{asset.type_name || `Type ${asset.type_id}`}</span>
+        <div className="flex items-center gap-2">
+          {asset.type_icon_url && (
+            <img
+              src={asset.type_icon_url}
+              alt={asset.type_name || `Type ${asset.type_id}`}
+              className="w-8 h-8 object-contain"
+              onError={(e) => {
+                // Hide image if it fails to load
+                (e.target as HTMLImageElement).style.display = 'none'
+              }}
+            />
+          )}
+          <span className="text-white font-medium">{asset.type_name || `Type ${asset.type_id}`}</span>
+        </div>
       ),
     },
     {

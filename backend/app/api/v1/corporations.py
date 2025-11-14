@@ -62,6 +62,7 @@ class CorporationAssetResponse(BaseModel):
     id: int
     type_id: int
     type_name: Optional[str]
+    type_icon_url: Optional[str]  # EVE image CDN URL for item icon
     quantity: int
     location_id: Optional[int]
     location_type: Optional[str]
@@ -225,8 +226,27 @@ async def get_assets(
         assets = query.offset(skip).limit(limit).all()
         total = query.count()
         
+        # Convert to response models with icon URLs
+        asset_responses = []
+        for asset in assets:
+            asset_dict = {
+                "id": asset.id,
+                "type_id": asset.type_id,
+                "type_name": asset.type_name,
+                "type_icon_url": f"https://images.evetech.net/types/{asset.type_id}/icon" if asset.type_id else None,
+                "quantity": asset.quantity,
+                "location_id": asset.location_id,
+                "location_type": asset.location_type,
+                "location_name": asset.location_name,
+                "is_singleton": asset.is_singleton,
+                "item_id": asset.item_id,
+                "flag": asset.flag,
+                "last_synced_at": asset.last_synced_at.isoformat() if asset.last_synced_at else None,
+            }
+            asset_responses.append(CorporationAssetResponse(**asset_dict))
+        
         return {
-            "items": assets,
+            "items": asset_responses,
             "total": total,
             "skip": skip,
             "limit": limit,
