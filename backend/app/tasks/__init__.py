@@ -1,0 +1,55 @@
+"""
+Celery tasks module
+"""
+from app.core.celery_app import celery_app
+from app.tasks.token_refresh import refresh_expired_tokens, refresh_token_for_character
+from app.tasks.killmail_sync import (
+    sync_killmails_from_esi,
+    sync_killmail_from_zkillboard,
+    subscribe_zkillboard_redisq,
+)
+from app.tasks.corporation_sync import (
+    sync_corporation_data,
+    sync_all_corporations,
+)
+from app.tasks.market_sync import (
+    sync_market_orders,
+    sync_trade_hub_markets,
+    sync_price_history,
+)
+
+# Import all tasks to ensure they're registered
+__all__ = [
+    "celery_app",
+    "refresh_expired_tokens",
+    "refresh_token_for_character",
+    "sync_killmails_from_esi",
+    "sync_killmail_from_zkillboard",
+    "subscribe_zkillboard_redisq",
+    "sync_corporation_data",
+    "sync_all_corporations",
+    "sync_market_orders",
+    "sync_trade_hub_markets",
+    "sync_price_history",
+]
+
+# Celery Beat schedule configuration
+celery_app.conf.beat_schedule = {
+    "refresh-expired-tokens": {
+        "task": "app.tasks.token_refresh.refresh_expired_tokens",
+        "schedule": 900.0,  # Every 15 minutes
+    },
+    "sync-killmails-from-esi": {
+        "task": "app.tasks.killmail_sync.sync_killmails_from_esi",
+        "schedule": 300.0,  # Every 5 minutes
+    },
+    "sync-all-corporations": {
+        "task": "app.tasks.corporation_sync.sync_all_corporations",
+        "schedule": 3600.0,  # Every hour
+    },
+    "sync-trade-hub-markets": {
+        "task": "app.tasks.market_sync.sync_trade_hub_markets",
+        "schedule": 600.0,  # Every 10 minutes
+    },
+}
+

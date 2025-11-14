@@ -1,0 +1,219 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgis/postgis:15-3.3
+    container_name: eve-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-eve_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secure_password}
+      POSTGRES_DB: ${POSTGRES_DB:-eve_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - eve-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-eve_user}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # No port mapping to avoid conflicts - use internal networking
+
+  redis:
+    image: redis:7-alpine
+    container_name: eve-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - eve-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # No port mapping to avoid conflicts - use internal networking
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    container_name: eve-api
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-eve_user}:${POSTGRES_PASSWORD:-secure_password}@postgres:5432/${POSTGRES_DB:-eve_db}
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: ${SECRET_KEY}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      ESI_CLIENT_ID: ${ESI_CLIENT_ID}
+      ESI_CLIENT_SECRET: ${ESI_CLIENT_SECRET}
+      ESI_CALLBACK_URL: ${ESI_CALLBACK_URL:-https://eveseat.tawfiqulbari.work/api/v1/auth/callback}
+      ESI_BASE_URL: ${ESI_BASE_URL:-https://esi.evetech.net/latest}
+      DEBUG: ${DEBUG:-False}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-https://eveseat.tawfiqulbari.work}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - eve-network
+      - traefik-proxy
+    labels:
+      - "traefik.enable=true"
+      # HTTPS router
+      - "traefik.http.routers.eve-api.rule=Host(`eveseat.tawfiqulbari.work`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.eve-api.entrypoints=websecure"
+      - "traefik.http.routers.eve-api.tls=true"
+      - "traefik.http.routers.eve-api.tls.certresolver=le"
+      - "traefik.http.routers.eve-api.middlewares=eve-api-stripprefix,security-headers"
+      # HTTP router (fallback)
+      - "traefik.http.routers.eve-api-http.rule=Host(`eveseat.tawfiqulbari.work`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.eve-api-http.entrypoints=web"
+      - "traefik.http.routers.eve-api-http.middlewares=eve-api-stripprefix,security-headers"
+      - "traefik.http.middlewares.eve-api-stripprefix.stripprefix.prefixes=/api"
+      - "traefik.http.services.eve-api.loadbalancer.server.port=8000"
+    restart: unless-stopped
+
+  websocket:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    container_name: eve-websocket
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8001
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-eve_user}:${POSTGRES_PASSWORD:-secure_password}@postgres:5432/${POSTGRES_DB:-eve_db}
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: ${SECRET_KEY}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - eve-network
+      - traefik-proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.eve-websocket.rule=Host(`eveseat.tawfiqulbari.work`) && PathPrefix(`/ws`)"
+      - "traefik.http.routers.eve-websocket.entrypoints=websecure"
+      - "traefik.http.routers.eve-websocket.tls.certresolver=le"
+      - "traefik.http.routers.eve-websocket.middlewares=eve-ws-stripprefix"
+      - "traefik.http.middlewares.eve-ws-stripprefix.stripprefix.prefixes=/ws"
+      - "traefik.http.services.eve-websocket.loadbalancer.server.port=8001"
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    container_name: eve-worker
+    command: celery -A app.tasks worker --loglevel=info --concurrency=4
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-eve_user}:${POSTGRES_PASSWORD:-secure_password}@postgres:5432/${POSTGRES_DB:-eve_db}
+      REDIS_URL: redis://redis:6379/0
+      ESI_CLIENT_ID: ${ESI_CLIENT_ID}
+      ESI_CLIENT_SECRET: ${ESI_CLIENT_SECRET}
+      ESI_BASE_URL: ${ESI_BASE_URL:-https://esi.evetech.net/latest}
+      ZKILL_REDISQ_QUEUE_ID: ${ZKILL_REDISQ_QUEUE_ID}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - eve-network
+    restart: unless-stopped
+    # No Traefik labels - internal service only
+
+  scheduler:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    container_name: eve-scheduler
+    command: celery -A app.tasks beat --loglevel=info
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-eve_user}:${POSTGRES_PASSWORD:-secure_password}@postgres:5432/${POSTGRES_DB:-eve_db}
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - eve-network
+    restart: unless-stopped
+    # No Traefik labels - internal service only
+
+  flower:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    container_name: eve-flower
+    command: celery -A app.tasks flower --port=5555
+    environment:
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      - redis
+    networks:
+      - eve-network
+      - traefik-proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.eve-flower.rule=Host(`flower.eveseat.tawfiqulbari.work`)"
+      - "traefik.http.routers.eve-flower.entrypoints=websecure"
+      - "traefik.http.routers.eve-flower.tls.certresolver=le"
+      - "traefik.http.services.eve-flower.loadbalancer.server.port=5555"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: production
+      args:
+        VITE_API_URL: ${VITE_API_URL:-https://eveseat.tawfiqulbari.work/api/v1}
+        VITE_WS_URL: ${VITE_WS_URL:-wss://eveseat.tawfiqulbari.work/ws}
+    container_name: eve-frontend
+    depends_on:
+      - api
+    networks:
+      - eve-network
+      - traefik-proxy
+    labels:
+      - "traefik.enable=true"
+      # HTTPS router
+      - "traefik.http.routers.eve-frontend.rule=Host(`eveseat.tawfiqulbari.work`) && !PathPrefix(`/api`)"
+      - "traefik.http.routers.eve-frontend.entrypoints=websecure"
+      - "traefik.http.routers.eve-frontend.tls=true"
+      - "traefik.http.routers.eve-frontend.tls.certresolver=le"
+      - "traefik.http.routers.eve-frontend.priority=10"
+      - "traefik.http.routers.eve-frontend.middlewares=security-headers,compression"
+      # HTTP router (fallback and redirect)
+      - "traefik.http.routers.eve-frontend-http.rule=Host(`eveseat.tawfiqulbari.work`) && !PathPrefix(`/api`)"
+      - "traefik.http.routers.eve-frontend-http.entrypoints=web"
+      - "traefik.http.routers.eve-frontend-http.priority=10"
+      - "traefik.http.routers.eve-frontend-http.middlewares=redirect-to-https"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
+      - "traefik.http.services.eve-frontend.loadbalancer.server.port=80"
+    restart: unless-stopped
+
+networks:
+  eve-network:
+    driver: bridge
+  traefik-proxy:
+    name: traefik-proxy
+    external: true
+
+volumes:
+  postgres_data:
+  redis_data:
+
