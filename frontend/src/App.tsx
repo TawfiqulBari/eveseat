@@ -15,6 +15,10 @@ const Wallet = lazy(() => import('./pages/Wallet'))
 const Contracts = lazy(() => import('./pages/Contracts'))
 const Contacts = lazy(() => import('./pages/Contacts'))
 const Calendar = lazy(() => import('./pages/Calendar'))
+const Industry = lazy(() => import('./pages/Industry'))
+const Blueprints = lazy(() => import('./pages/Blueprints'))
+const Planetary = lazy(() => import('./pages/Planetary'))
+const Loyalty = lazy(() => import('./pages/Loyalty'))
 const Login = lazy(() => import('./pages/Login'))
 const Callback = lazy(() => import('./pages/Callback'))
 
@@ -61,6 +65,10 @@ function ProtectedRoutes() {
         <Route path="/contracts" element={<Contracts />} />
         <Route path="/contacts" element={<Contacts />} />
         <Route path="/calendar" element={<Calendar />} />
+        <Route path="/industry" element={<Industry />} />
+        <Route path="/blueprints" element={<Blueprints />} />
+        <Route path="/planetary" element={<Planetary />} />
+        <Route path="/loyalty" element={<Loyalty />} />
       </Routes>
     </Layout>
   )

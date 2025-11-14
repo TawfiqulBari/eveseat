@@ -4,13 +4,34 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is an EVE Online management platform designed as a Docker-based, multi-tenant application. It integrates with EVE Online's ESI (EVE Swagger Interface) API to provide:
+This is an EVE Online management platform designed as a Docker-based, multi-tenant application. It integrates with EVE Online's ESI (EVE Swagger Interface) API to provide comprehensive character and corporation management:
+
+### Core Features
 - Multi-character management across a single user account
-- Live killmail tracking and analytics
+- Live killmail tracking and analytics with real-time WebSocket updates
 - Interactive universe map with route planning
 - Corporation and alliance management
-- Market data analysis
+- Market data analysis and order tracking
 - Fleet management and doctrine compliance
+
+### Character Management (Phase 2 - COMPLETE)
+- **Mail System**: Full EVE mail support with labels, mailing lists, and compose/read functionality
+- **Contacts**: Contact management with standings, labels, and watch lists
+- **Calendar**: Event tracking with RSVP functionality and upcoming events
+- **Contracts**: Contract tracking for all types (item exchange, auction, courier, loan) with detailed items
+- **Wallet**: Transaction history, journal entries, and financial analytics with 30-day statistics
+
+### Industry & Economy (Phase 3 - COMPLETE)
+- **Industry Jobs**: Manufacturing, research, copying, and invention job tracking with facility management
+- **Blueprints**: Blueprint library with ME/TE research levels for both BPOs and BPCs
+- **Planetary Interaction**: Colony management with pin tracking and extraction monitoring
+- **Loyalty Points**: LP balance tracking across all corporations with top corporation rankings
+
+### Real-time Features
+- WebSocket server for live data updates across all features
+- Redis pub/sub for scalable multi-server deployment
+- Background sync tasks with Celery for automated data updates
+- Intelligent rate limiting and ESI cache management
 
 The application follows a microservices architecture with separate containers for frontend, API, workers, and supporting services.
 

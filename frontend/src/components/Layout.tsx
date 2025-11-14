@@ -23,6 +23,10 @@ const navigation = [
   { name: 'Contracts', path: '/contracts', icon: '📄' },
   { name: 'Contacts', path: '/contacts', icon: '👥' },
   { name: 'Calendar', path: '/calendar', icon: '📅' },
+  { name: 'Industry', path: '/industry', icon: '🏭' },
+  { name: 'Blueprints', path: '/blueprints', icon: '📐' },
+  { name: 'Planetary', path: '/planetary', icon: '🌍' },
+  { name: 'Loyalty', path: '/loyalty', icon: '⭐' },
 ]
 
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
