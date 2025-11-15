@@ -28,6 +28,27 @@ def run_async(coro):
 
 
 @celery_app.task(bind=True, max_retries=3, default_retry_delay=60)
+def sync_faction_warfare_data(self: Task):
+    """
+    Sync all faction warfare data from ESI
+
+    This is a wrapper task that triggers both systems and stats sync
+    """
+    try:
+        logger.info("Starting faction warfare data sync")
+
+        # Trigger both sync tasks
+        sync_faction_warfare_systems.delay()
+        sync_faction_warfare_stats.delay()
+
+        logger.info("Faction warfare data sync tasks queued")
+        return {"status": "success", "message": "FW sync tasks queued"}
+    except Exception as e:
+        logger.error(f"Error queueing faction warfare sync tasks: {e}")
+        raise self.retry(exc=e)
+
+
+@celery_app.task(bind=True, max_retries=3, default_retry_delay=60)
 def sync_faction_warfare_systems(self: Task):
     """Sync all faction warfare systems from ESI"""
     try:
