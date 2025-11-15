@@ -1,0 +1,95 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  deploy:
+    name: Deploy to Server
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to Production Server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            echo "🚀 Starting deployment to eveseat.tawfiqulbari.work"
+
+            # Navigate to deployment directory
+            cd ${{ secrets.DEPLOYMENT_PATH }}
+
+            echo "📥 Pulling latest code from GitHub..."
+            git fetch --all
+            git reset --hard origin/main
+            git pull origin main
+
+            echo "🐳 Stopping services..."
+            docker-compose down
+
+            echo "🔨 Building updated containers..."
+            docker-compose build --no-cache
+
+            echo "🚀 Starting services..."
+            docker-compose up -d
+
+            echo "⏳ Waiting for services to be ready..."
+            sleep 10
+
+            echo "🔄 Running database migrations..."
+            docker-compose exec -T api alembic upgrade head
+
+            echo "✅ Deployment complete!"
+
+            echo "📊 Service status:"
+            docker-compose ps
+
+            echo "🏥 Health check:"
+            docker-compose exec -T api curl -f http://localhost:8000/health || echo "Warning: Health check failed"
+
+      - name: Verify Deployment
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            cd ${{ secrets.DEPLOYMENT_PATH }}
+
+            echo "🔍 Checking running containers..."
+            docker-compose ps
+
+            echo "📝 Recent logs (last 50 lines):"
+            docker-compose logs --tail=50
+
+            echo "🌐 Testing external endpoints..."
+            curl -I -s https://eveseat.tawfiqulbari.work | head -1 || echo "Frontend check failed"
+            curl -s https://eveseat.tawfiqulbari.work/api/v1/health || echo "API health check failed"
+
+      - name: Notify on Success
+        if: success()
+        run: |
+          echo "✅ Deployment to eveseat.tawfiqulbari.work completed successfully!"
+          echo "🌐 Application: https://eveseat.tawfiqulbari.work"
+          echo "📚 API Docs: https://eveseat.tawfiqulbari.work/api/v1/docs"
+          echo "🌺 Flower: https://flower.eveseat.tawfiqulbari.work"
+
+      - name: Notify on Failure
+        if: failure()
+        run: |
+          echo "❌ Deployment failed! Please check the logs above."
+          echo "🔍 Common issues:"
+          echo "  - SSH connection problems"
+          echo "  - Docker build errors"
+          echo "  - Database migration errors"
+          echo "  - Service health check failures"
