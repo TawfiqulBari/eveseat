@@ -17,20 +17,18 @@ logger = logging.getLogger(__name__)
 
 
 async def get_current_user(
-    character_id: Optional[int] = Query(None, description="Character ID for authentication"),
     x_character_id: Optional[str] = Header(None, alias="X-Character-ID"),
     db: Session = Depends(get_db),
 ) -> User:
     """
-    Get current authenticated user based on character ID
+    Get current authenticated user based on character ID from header
 
     This dependency validates that:
-    1. A character ID is provided (via query param or header)
+    1. A character ID is provided via X-Character-ID header
     2. The character exists in the database
     3. The character has an active EVE token
 
     Args:
-        character_id: Character ID from query parameter
         x_character_id: Character ID from X-Character-ID header
         db: Database session
 
@@ -39,9 +37,14 @@ async def get_current_user(
 
     Raises:
         HTTPException: If authentication fails
+
+    Note:
+        Character ID must be passed in the X-Character-ID header.
+        Individual endpoints may also have character_id as a path/query parameter
+        for authorization checks.
     """
-    # Get character ID from query param or header
-    char_id = character_id or (int(x_character_id) if x_character_id else None)
+    # Get character ID from header
+    char_id = int(x_character_id) if x_character_id else None
 
     if not char_id:
         raise HTTPException(
