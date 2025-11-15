@@ -69,15 +69,14 @@
 # SSH into your server
 ssh root@217.216.111.197
 
-# Create application directory
-sudo mkdir -p /opt/eveseat
-cd /opt/eveseat
+# Navigate to project directory
+cd /root/personal-projects/eve-online-app-1
 
-# Clone the repository
-git clone https://github.com/TawfiqulBari/eveseat.git .
-
-# Or if you've already cloned, just navigate
-cd /opt/eveseat
+# If not yet cloned, create directory and clone
+# mkdir -p /root/personal-projects
+# cd /root/personal-projects
+# git clone https://github.com/TawfiqulBari/eveseat.git eve-online-app-1
+# cd eve-online-app-1
 ```
 
 ### 2. Create Environment File
@@ -151,7 +150,7 @@ Click **"New repository secret"** and add:
 | `SERVER_IP` | `217.216.111.197` |
 | `SSH_USER` | `root` |
 | `SSH_PRIVATE_KEY` | *Contents of your id_rsa file* |
-| `DEPLOYMENT_PATH` | `/opt/eveseat` |
+| `DEPLOYMENT_PATH` | `/root/personal-projects/eve-online-app-1` |
 
 To get your private key:
 ```bash
@@ -191,7 +190,7 @@ git push origin main
 ```bash
 # SSH into server
 ssh root@217.216.111.197
-cd /opt/eveseat
+cd /root/personal-projects/eve-online-app-1
 
 # Pull latest code
 git pull origin main
@@ -213,7 +212,7 @@ docker-compose ps
 ```bash
 # SSH into server
 ssh root@217.216.111.197
-cd /opt/eveseat
+cd /root/personal-projects/eve-online-app-1
 
 # Pull latest code
 git pull origin main
@@ -472,7 +471,7 @@ docker-compose exec -T postgres psql -U eve_user eve_db < backup_20250115_120000
 
 ```bash
 # Pull latest code
-cd /opt/eveseat
+cd /root/personal-projects/eve-online-app-1
 git pull origin main
 
 # Rebuild and restart
