@@ -26,6 +26,10 @@ const Bookmarks = lazy(() => import('./pages/Bookmarks'))
 const Structures = lazy(() => import('./pages/Structures'))
 const MoonMining = lazy(() => import('./pages/MoonMining'))
 const Sovereignty = lazy(() => import('./pages/Sovereignty'))
+const Analytics = lazy(() => import('./pages/Analytics'))
+const ProfitLoss = lazy(() => import('./pages/ProfitLoss'))
+const MarketTrends = lazy(() => import('./pages/MarketTrends'))
+const IndustryCalculator = lazy(() => import('./pages/IndustryCalculator'))
 const Login = lazy(() => import('./pages/Login'))
 const Callback = lazy(() => import('./pages/Callback'))
 
@@ -83,6 +87,10 @@ function ProtectedRoutes() {
         <Route path="/structures" element={<Structures />} />
         <Route path="/moon-mining" element={<MoonMining />} />
         <Route path="/sovereignty" element={<Sovereignty />} />
+        <Route path="/analytics" element={<Analytics />} />
+        <Route path="/profit-loss" element={<ProfitLoss />} />
+        <Route path="/market-trends" element={<MarketTrends />} />
+        <Route path="/industry-calculator" element={<IndustryCalculator />} />
       </Routes>
     </Layout>
   )

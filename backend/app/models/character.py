@@ -70,6 +70,11 @@ class Character(Base):
     active_implants = relationship("ActiveImplant", back_populates="character", cascade="all, delete-orphan")
     bookmarks = relationship("Bookmark", back_populates="character", cascade="all, delete-orphan")
     bookmark_folders = relationship("BookmarkFolder", back_populates="character", cascade="all, delete-orphan")
+    # Phase 6 relationships
+    profit_loss = relationship("ProfitLoss", back_populates="character", cascade="all, delete-orphan")
+    industry_profitability = relationship("IndustryProfitability", back_populates="character", cascade="all, delete-orphan")
+    isk_flow = relationship("ISKFlow", back_populates="character", cascade="all, delete-orphan")
+    portfolio_snapshots = relationship("PortfolioSnapshot", back_populates="character", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Character(id={self.id}, character_id={self.character_id}, character_name='{self.character_name}')>"

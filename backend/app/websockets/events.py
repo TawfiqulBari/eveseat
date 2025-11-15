@@ -99,6 +99,13 @@ class EventType(str, Enum):
     SOVEREIGNTY_CAMPAIGN_START = "sovereignty.campaign.start"
     SOVEREIGNTY_CAMPAIGN_END = "sovereignty.campaign.end"
 
+    ANALYTICS_UPDATE = "analytics.update"
+    PROFIT_LOSS_UPDATE = "profit_loss.update"
+    ISK_FLOW_UPDATE = "isk_flow.update"
+    PORTFOLIO_UPDATE = "portfolio.update"
+    MARKET_TREND_UPDATE = "market_trend.update"
+    TRADING_OPPORTUNITY_NEW = "trading_opportunity.new"
+
     # Sync status events
     SYNC_START = "sync.start"
     SYNC_PROGRESS = "sync.progress"
@@ -134,6 +141,7 @@ class Topic(str, Enum):
     STRUCTURES = "structures"
     MOON_MINING = "moon_mining"
     SOVEREIGNTY = "sovereignty"
+    ANALYTICS = "analytics"
     SYNC_STATUS = "sync.status"
 
     # Admin topics (admin auth required)

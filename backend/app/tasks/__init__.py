@@ -42,6 +42,14 @@ from app.tasks.bookmark_sync import sync_character_bookmarks
 from app.tasks.structure_sync import sync_corporation_structures
 from app.tasks.moon_sync import sync_moon_extractions, sync_mining_ledger
 from app.tasks.sovereignty_sync import sync_sovereignty_data
+from app.tasks.analytics_sync import (
+    calculate_profit_loss,
+    aggregate_isk_flow,
+    calculate_industry_profitability,
+    calculate_market_trends,
+    find_trading_opportunities,
+    create_portfolio_snapshot,
+)
 
 # Import all tasks to ensure they're registered
 __all__ = [
@@ -79,6 +87,12 @@ __all__ = [
     "sync_moon_extractions",
     "sync_mining_ledger",
     "sync_sovereignty_data",
+    "calculate_profit_loss",
+    "aggregate_isk_flow",
+    "calculate_industry_profitability",
+    "calculate_market_trends",
+    "find_trading_opportunities",
+    "create_portfolio_snapshot",
 ]
 
 # Celery Beat schedule configuration
