@@ -38,6 +38,15 @@ This is an EVE Online management platform designed as a Docker-based, multi-tena
 - **Moon Mining**: Moon extraction tracking and mining ledger for corp mining operations
 - **Sovereignty**: System sovereignty tracking, structure monitoring, and active campaign alerts
 
+### Advanced Analytics (Phase 6 - COMPLETE)
+- **Analytics Dashboard**: Comprehensive financial overview with net worth, profit/loss, and industry performance
+- **Profit & Loss Tracking**: Daily income and expense tracking with category breakdown
+- **Market Trends**: Price trend analysis with volatility indicators and volume statistics
+- **Industry Calculator**: Job profitability calculations with cost breakdown and margin analysis
+- **ISK Flow**: Income and expense flow categorization and visualization
+- **Trading Opportunities**: Automated detection of profitable trading opportunities
+- **Portfolio Snapshots**: Net worth tracking over time with change metrics
+
 ### Real-time Features
 - WebSocket server for live data updates across all features
 - Redis pub/sub for scalable multi-server deployment
