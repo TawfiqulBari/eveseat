@@ -33,6 +33,11 @@ This is an EVE Online management platform designed as a Docker-based, multi-tena
 - **Jump Clones**: Jump clone management with implant tracking and clone history
 - **Bookmarks**: Location bookmarks with folder organization and coordinate tracking
 
+### Corporation Features (Phase 5 - COMPLETE)
+- **Structures**: Corporation structure management with fuel tracking and reinforcement schedules
+- **Moon Mining**: Moon extraction tracking and mining ledger for corp mining operations
+- **Sovereignty**: System sovereignty tracking, structure monitoring, and active campaign alerts
+
 ### Real-time Features
 - WebSocket server for live data updates across all features
 - Redis pub/sub for scalable multi-server deployment
