@@ -36,7 +36,7 @@ Base = declarative_base()
 def get_db() -> Generator[Session, None, None]:
     """
     Database session dependency for FastAPI
-    
+
     Usage:
         @app.get("/items")
         def get_items(db: Session = Depends(get_db)):
@@ -47,6 +47,24 @@ def get_db() -> Generator[Session, None, None]:
         yield db
     finally:
         db.close()
+
+
+def get_db_session() -> Session:
+    """
+    Get a database session for synchronous use (e.g., in Celery tasks)
+
+    Usage:
+        db = get_db_session()
+        try:
+            # Do database operations
+            items = db.query(Item).all()
+        finally:
+            db.close()
+
+    Returns:
+        SQLAlchemy Session object
+    """
+    return SessionLocal()
 
 
 # Enable PostGIS extension on connection
