@@ -8,7 +8,7 @@ from datetime import datetime
 from pydantic import BaseModel
 
 from app.core.database import get_db
-from app.core.security import get_current_user
+from app.api.deps import get_current_user
 from app.models.user import User
 from app.models.moon import MoonExtraction, Moon, MiningLedger
 from app.tasks.moon_sync import sync_moon_extractions, sync_mining_ledger

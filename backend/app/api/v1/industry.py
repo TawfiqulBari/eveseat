@@ -9,7 +9,7 @@ from pydantic import BaseModel
 from datetime import datetime, timedelta
 
 from app.core.database import get_db
-from app.core.security import get_current_user
+from app.api.deps import get_current_user
 from app.models.user import User
 from app.models.character import Character
 from app.models.industry import IndustryJob, IndustryFacility, IndustryActivity
