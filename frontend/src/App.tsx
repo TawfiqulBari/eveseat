@@ -30,6 +30,10 @@ const Analytics = lazy(() => import('./pages/Analytics'))
 const ProfitLoss = lazy(() => import('./pages/ProfitLoss'))
 const MarketTrends = lazy(() => import('./pages/MarketTrends'))
 const IndustryCalculator = lazy(() => import('./pages/IndustryCalculator'))
+const Alliances = lazy(() => import('./pages/Alliances'))
+const Wars = lazy(() => import('./pages/Wars'))
+const Incursions = lazy(() => import('./pages/Incursions'))
+const FactionWarfare = lazy(() => import('./pages/FactionWarfare'))
 const Login = lazy(() => import('./pages/Login'))
 const Callback = lazy(() => import('./pages/Callback'))
 
@@ -91,6 +95,10 @@ function ProtectedRoutes() {
         <Route path="/profit-loss" element={<ProfitLoss />} />
         <Route path="/market-trends" element={<MarketTrends />} />
         <Route path="/industry-calculator" element={<IndustryCalculator />} />
+        <Route path="/alliances" element={<Alliances />} />
+        <Route path="/wars" element={<Wars />} />
+        <Route path="/incursions" element={<Incursions />} />
+        <Route path="/faction-warfare" element={<FactionWarfare />} />
       </Routes>
     </Layout>
   )

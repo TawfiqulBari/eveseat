@@ -38,6 +38,10 @@ const navigation = [
   { name: 'Profit & Loss', path: '/profit-loss', icon: '💹' },
   { name: 'Market Trends', path: '/market-trends', icon: '📊' },
   { name: 'Industry Calc', path: '/industry-calculator', icon: '🧮' },
+  { name: 'Alliances', path: '/alliances', icon: '🤝' },
+  { name: 'Wars', path: '/wars', icon: '⚔️' },
+  { name: 'Incursions', path: '/incursions', icon: '🔴' },
+  { name: 'Faction Warfare', path: '/faction-warfare', icon: '🎖️' },
 ]
 
 export const Layout: React.FC<LayoutProps> = ({ children }) => {

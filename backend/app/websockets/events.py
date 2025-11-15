@@ -106,6 +106,29 @@ class EventType(str, Enum):
     MARKET_TREND_UPDATE = "market_trend.update"
     TRADING_OPPORTUNITY_NEW = "trading_opportunity.new"
 
+    # Alliance events
+    ALLIANCE_UPDATE = "alliance.update"
+    ALLIANCE_CORPORATION_JOIN = "alliance.corporation.join"
+    ALLIANCE_CORPORATION_LEAVE = "alliance.corporation.leave"
+
+    # War events
+    WAR_UPDATE = "war.update"
+    WAR_START = "war.start"
+    WAR_END = "war.end"
+    WAR_ALLY_JOIN = "war.ally.join"
+
+    # Incursion events
+    INCURSION_NEW = "incursion.new"
+    INCURSION_UPDATE = "incursion.update"
+    INCURSION_END = "incursion.end"
+    INCURSION_PARTICIPATION = "incursion.participation"
+
+    # Faction Warfare events
+    FW_UPDATE = "faction_warfare.update"
+    FW_SYSTEM_CHANGE = "faction_warfare.system.change"
+    FW_CHARACTER_UPDATE = "faction_warfare.character.update"
+    FW_LEADERBOARD_UPDATE = "faction_warfare.leaderboard.update"
+
     # Sync status events
     SYNC_START = "sync.start"
     SYNC_PROGRESS = "sync.progress"
@@ -142,6 +165,10 @@ class Topic(str, Enum):
     MOON_MINING = "moon_mining"
     SOVEREIGNTY = "sovereignty"
     ANALYTICS = "analytics"
+    ALLIANCES = "alliances"
+    WARS = "wars"
+    INCURSIONS = "incursions"
+    FACTION_WARFARE = "faction_warfare"
     SYNC_STATUS = "sync.status"
 
     # Admin topics (admin auth required)

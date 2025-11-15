@@ -50,6 +50,19 @@ from app.tasks.analytics_sync import (
     find_trading_opportunities,
     create_portfolio_snapshot,
 )
+from app.tasks.alliance_sync import sync_alliance_data
+from app.tasks.war_sync import sync_wars_data, sync_war_killmails
+from app.tasks.incursion_sync import (
+    sync_incursions_data,
+    update_incursion_statistics,
+    record_incursion_participation,
+)
+from app.tasks.faction_warfare_sync import (
+    sync_faction_warfare_systems,
+    sync_faction_warfare_stats,
+    sync_character_faction_warfare,
+    update_faction_warfare_leaderboard,
+)
 
 # Import all tasks to ensure they're registered
 __all__ = [
@@ -93,6 +106,16 @@ __all__ = [
     "calculate_market_trends",
     "find_trading_opportunities",
     "create_portfolio_snapshot",
+    "sync_alliance_data",
+    "sync_wars_data",
+    "sync_war_killmails",
+    "sync_incursions_data",
+    "update_incursion_statistics",
+    "record_incursion_participation",
+    "sync_faction_warfare_systems",
+    "sync_faction_warfare_stats",
+    "sync_character_faction_warfare",
+    "update_faction_warfare_leaderboard",
 ]
 
 # Celery Beat schedule configuration
