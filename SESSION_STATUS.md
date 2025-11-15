@@ -3,7 +3,7 @@
 ## Session Summary
 **Date**: November 14, 2025
 **Branch**: `claude/explore-eveseat-codebase-01QoRVG95G4cJ6iUbtNCaBHw`
-**Latest Commit**: 1965003 - Add Phase 4: Advanced Features (Fittings, Skills, Clones, Bookmarks)
+**Latest Commit**: 3502256 - Add Phase 5: Corporation Features (Structures, Moon Mining, Sovereignty)
 
 ---
 
@@ -130,29 +130,62 @@
 
 ---
 
+### Phase 5: Corporation Features (COMPLETE)
+
+#### Backend Implementation
+- [x] Corporation Structures
+  - Models: `Structure`, `StructureVulnerability`, `StructureService`
+  - API: 4 endpoints (list, get, statistics, sync)
+  - Task: `sync_corporation_structures`
+
+- [x] Moon Mining Operations
+  - Models: `MoonExtraction`, `Moon`, `MiningLedger`
+  - API: 7 endpoints (extractions, moons, ledger, statistics, sync)
+  - Task: `sync_moon_extractions`, `sync_mining_ledger`
+
+- [x] Sovereignty Tracking
+  - Models: `SystemSovereignty`, `SovereigntyStructure`, `SovereigntyCampaign`
+  - API: 6 endpoints (systems, structures, campaigns, statistics, sync)
+  - Task: `sync_sovereignty_data`
+
+#### Frontend Implementation
+- [x] Structures page with corporation structure management and fuel alerts
+- [x] Moon Mining page with extractions and ledger tabs
+- [x] Sovereignty page with systems and campaigns tracking
+- [x] Navigation and routing updated for Phase 5
+- [x] TypeScript services for all Phase 5 features
+
+#### WebSocket Integration
+- [x] Event types: `STRUCTURE_UPDATE`, `STRUCTURE_FUEL_LOW`, `STRUCTURE_REINFORCED`, `MOON_EXTRACTION_UPDATE`, `MOON_EXTRACTION_READY`, `MINING_LEDGER_UPDATE`, `SOVEREIGNTY_UPDATE`, `SOVEREIGNTY_CAMPAIGN_START`, `SOVEREIGNTY_CAMPAIGN_END`
+- [x] Topics: `STRUCTURES`, `MOON_MINING`, `SOVEREIGNTY`
+
+**Total Phase 5**: 9 database tables, 17 API endpoints, 3 Celery tasks, 3 frontend pages
+
+---
+
 ## 📊 Overall Statistics
 
 ### Database
-- **Total Tables**: 35+ (including Phase 1, 2, 3, and 4)
-- **New Tables (P2+P3+P4)**: 26
-- **Relationships**: All linked to Character model with proper cascade
+- **Total Tables**: 50+ (including Phase 1, 2, 3, 4, 5, and 6)
+- **New Tables (P2+P3+P4+P5+P6)**: 41
+- **Relationships**: Linked to Character and Corporation models with proper cascade
 
 ### Backend
-- **API Endpoints**: 59 new endpoints (24 Phase 2 + 18 Phase 3 + 17 Phase 4)
-- **Celery Tasks**: 13 new background sync tasks
-- **WebSocket Events**: 22+ event types for real-time updates
-- **ESI Scopes**: 50+ configured scopes
+- **API Endpoints**: 98 new endpoints (24 Phase 2 + 18 Phase 3 + 17 Phase 4 + 17 Phase 5 + 22 Phase 6)
+- **Celery Tasks**: 22 new background sync tasks
+- **WebSocket Events**: 37+ event types for real-time updates
+- **ESI Scopes**: 55+ configured scopes
 
 ### Frontend
-- **Pages**: 12 new pages (4 Phase 2 + 4 Phase 3 + 4 Phase 4)
-- **Services**: 12 TypeScript service files
-- **Navigation Items**: 18 total menu items
-- **Lines of Code**: ~7,600+ lines added
+- **Pages**: 19 new pages (4 Phase 2 + 4 Phase 3 + 4 Phase 4 + 3 Phase 5 + 4 Phase 6)
+- **Services**: 16 TypeScript service files
+- **Navigation Items**: 25 total menu items
+- **Lines of Code**: ~13,260+ lines added
 
 ### Configuration
-- **ESI Scopes Added**: All Phase 2, 3, and 4 scopes configured in `config.py`
-- **WebSocket Topics**: mail, contacts, calendar, contracts, wallet, industry, blueprints, planetary, loyalty, fittings, skills, clones, bookmarks
-- **Routers Registered**: All Phase 2, 3, & 4 routers in `main.py`
+- **ESI Scopes Added**: All Phase 2, 3, 4, 5, and 6 scopes configured in `config.py`
+- **WebSocket Topics**: mail, contacts, calendar, contracts, wallet, industry, blueprints, planetary, loyalty, fittings, skills, clones, bookmarks, structures, moon_mining, sovereignty, analytics
+- **Routers Registered**: All Phase 2, 3, 4, 5, & 6 routers in `main.py`
 - **Tasks Registered**: All sync tasks in `tasks/__init__.py`
 
 ---
@@ -208,6 +241,17 @@ After deployment, users can access:
 - **Clones** → Manage jump clones and implants
 - **Bookmarks** → Organize location bookmarks
 
+### Corporation Features
+- **Structures** → Monitor corp structures and fuel
+- **Moon Mining** → Track extractions and mining ledger
+- **Sovereignty** → Monitor sov and campaigns
+
+### Advanced Analytics
+- **Analytics Dashboard** → Financial overview with net worth and performance metrics
+- **Profit & Loss** → Income and expense tracking with category breakdown
+- **Market Trends** → Price trend analysis with volatility indicators
+- **Industry Calculator** → Job profitability analysis with cost breakdown
+
 ### Other Features
 - **Killmails** → Real-time kill tracking
 - **Map** → Universe navigation
@@ -237,16 +281,19 @@ backend/app/
 │   ├── contact.py, calendar.py, contract.py, wallet.py
 │   ├── industry.py, blueprint.py, planetary.py, loyalty.py
 │   ├── fitting.py, skill.py, clone.py, bookmark.py
+│   ├── structure.py, moon.py, sovereignty.py
 ├── api/v1/
 │   ├── contacts.py, calendar.py, contracts.py, wallet.py
 │   ├── industry.py, blueprints.py, planetary.py, loyalty.py
 │   ├── fittings.py, skills.py, clones.py, bookmarks.py
+│   ├── structures.py, moons.py, sov.py
 ├── tasks/
 │   ├── contact_sync.py, calendar_sync.py, contract_sync.py, wallet_sync.py
 │   ├── industry_sync.py, blueprint_sync.py, planetary_sync.py, loyalty_sync.py
 │   ├── fitting_sync.py, skill_sync.py, clone_sync.py, bookmark_sync.py
+│   ├── structure_sync.py, moon_sync.py, sovereignty_sync.py
 └── websockets/
-    └── events.py (updated with Phase 4 events)
+    └── events.py (updated with Phase 5 events)
 ```
 
 ### Frontend
@@ -256,27 +303,23 @@ frontend/src/
 │   ├── Contacts.tsx, Calendar.tsx, Contracts.tsx, Wallet.tsx
 │   ├── Industry.tsx, Blueprints.tsx, Planetary.tsx, Loyalty.tsx
 │   ├── Fittings.tsx, Skills.tsx, Clones.tsx, Bookmarks.tsx
+│   ├── Structures.tsx, MoonMining.tsx, Sovereignty.tsx
 └── services/
     ├── contacts.ts, calendar.ts, contracts.ts, wallet.ts
     ├── industry.ts, blueprints.ts, planetary.ts, loyalty.ts
     ├── fittings.ts, skills.ts, clones.ts, bookmarks.ts
+    ├── structures.ts, moons.ts, sovereignty.ts
 ```
 
 ---
 
 ## 🎯 Next Steps (Future Phases)
 
-### Phase 5: Corporation Features (Pending)
-- Advanced corporation management
-- Structure management
-- Moon mining tracking
-- Sovereignty data
-
-### Phase 6: Advanced Analytics (Pending)
-- Market trend analysis
-- Profit/loss tracking
-- Industry profitability calculator
-- ISK flow visualization
+### Phase 7: Advanced Features (Pending)
+- Alliance management and tracking
+- Wars and battles monitoring
+- Incursions tracking with rewards
+- Faction warfare statistics
 
 ---
 
@@ -315,5 +358,57 @@ frontend/src/
 
 ---
 
-**Status**: ✅ Phase 4 Complete - Ready for deployment
+## 🎉 Phase 5 Summary
+
+**Implementation Date**: November 14, 2025
+**Files Changed**: 21 files
+**Lines Added**: 2,629 lines
+**Commit Hash**: 3502256
+
+### What's New in Phase 5
+1. **Corporation Structures**: Complete structure management with fuel tracking, state monitoring, and reinforcement schedules
+2. **Moon Mining**: Extraction tracking with chunk arrival alerts, mining ledger with character-level tracking
+3. **Sovereignty**: System sovereignty mapping, structure monitoring, and active campaign tracking (public data)
+
+### Technical Highlights
+- Corporation-level data management (beyond character-focused Phase 2-4)
+- Public sovereignty endpoints (no authentication required)
+- Fuel expiration alerts and low fuel warnings
+- Extraction timing and readiness tracking
+- Active campaign score monitoring with defender/attacker breakdown
+- WebSocket events for structure states and extraction updates
+
+---
+
+**Status**: ✅ Phase 5 Complete - Ready for deployment
+
+---
+
+## 🎉 Phase 6 Summary
+
+**Implementation Date**: November 15, 2025
+**Files Changed**: 14 files
+**Lines Added**: 3,059 lines
+**Commit Hash**: 21e558b
+
+### What's New in Phase 6
+1. **Analytics Dashboard**: Comprehensive financial overview with net worth tracking, profit/loss summary, and industry performance metrics
+2. **Profit & Loss Tracking**: Daily income and expense tracking with category breakdown and trend visualization
+3. **Market Trends**: Price trend analysis with volatility indicators, volume statistics, and interactive charts
+4. **Industry Calculator**: Job profitability calculations with detailed cost breakdown, margin analysis, and ISK/hour metrics
+5. **ISK Flow**: Income and expense flow categorization with visualization
+6. **Trading Opportunities**: Automated detection of profitable trading opportunities with risk analysis
+7. **Portfolio Snapshots**: Net worth tracking over time with change metrics
+
+### Technical Highlights
+- 6 comprehensive analytics models with proper indexing
+- 22 API endpoints covering all analytics features
+- 6 Celery tasks for automated data aggregation and calculation
+- Chart.js integration for data visualization
+- Real-time WebSocket updates for analytics data
+- Profit/loss calculation from wallet transactions and killmail losses
+- Market trend detection with volatility scoring
+- Industry profitability with time value calculations
+
+**Status**: ✅ Phase 6 Complete - Ready for deployment
 **Next Action**: Pull changes and rebuild containers

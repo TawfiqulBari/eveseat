@@ -39,6 +39,30 @@ from app.tasks.fitting_sync import sync_character_fittings
 from app.tasks.skill_sync import sync_character_skills
 from app.tasks.clone_sync import sync_character_clones
 from app.tasks.bookmark_sync import sync_character_bookmarks
+from app.tasks.structure_sync import sync_corporation_structures
+from app.tasks.moon_sync import sync_moon_extractions, sync_mining_ledger
+from app.tasks.sovereignty_sync import sync_sovereignty_data
+from app.tasks.analytics_sync import (
+    calculate_profit_loss,
+    aggregate_isk_flow,
+    calculate_industry_profitability,
+    calculate_market_trends,
+    find_trading_opportunities,
+    create_portfolio_snapshot,
+)
+from app.tasks.alliance_sync import sync_alliance_data
+from app.tasks.war_sync import sync_wars_data, sync_war_killmails
+from app.tasks.incursion_sync import (
+    sync_incursions_data,
+    update_incursion_statistics,
+    record_incursion_participation,
+)
+from app.tasks.faction_warfare_sync import (
+    sync_faction_warfare_systems,
+    sync_faction_warfare_stats,
+    sync_character_faction_warfare,
+    update_faction_warfare_leaderboard,
+)
 
 # Import all tasks to ensure they're registered
 __all__ = [
@@ -72,6 +96,26 @@ __all__ = [
     "sync_character_skills",
     "sync_character_clones",
     "sync_character_bookmarks",
+    "sync_corporation_structures",
+    "sync_moon_extractions",
+    "sync_mining_ledger",
+    "sync_sovereignty_data",
+    "calculate_profit_loss",
+    "aggregate_isk_flow",
+    "calculate_industry_profitability",
+    "calculate_market_trends",
+    "find_trading_opportunities",
+    "create_portfolio_snapshot",
+    "sync_alliance_data",
+    "sync_wars_data",
+    "sync_war_killmails",
+    "sync_incursions_data",
+    "update_incursion_statistics",
+    "record_incursion_participation",
+    "sync_faction_warfare_systems",
+    "sync_faction_warfare_stats",
+    "sync_character_faction_warfare",
+    "update_faction_warfare_leaderboard",
 ]
 
 # Celery Beat schedule configuration

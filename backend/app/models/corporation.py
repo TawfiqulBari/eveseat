@@ -49,6 +49,10 @@ class Corporation(Base):
     members = relationship("CorporationMember", back_populates="corporation", cascade="all, delete-orphan")
     assets = relationship("CorporationAsset", back_populates="corporation", cascade="all, delete-orphan")
     structures = relationship("CorporationStructure", back_populates="corporation", cascade="all, delete-orphan")
+
+    # Phase 5 relationships
+    moon_extractions = relationship("MoonExtraction", back_populates="corporation", cascade="all, delete-orphan")
+    mining_ledger = relationship("MiningLedger", back_populates="corporation", cascade="all, delete-orphan")
     
     def __repr__(self):
         return f"<Corporation(id={self.id}, corporation_id={self.corporation_id}, corporation_name='{self.corporation_name}')>"

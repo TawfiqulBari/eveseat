@@ -87,6 +87,48 @@ class EventType(str, Enum):
     BOOKMARK_DELETE = "bookmark.delete"
     BOOKMARK_FOLDER_UPDATE = "bookmark.folder.update"
 
+    STRUCTURE_UPDATE = "structure.update"
+    STRUCTURE_FUEL_LOW = "structure.fuel.low"
+    STRUCTURE_REINFORCED = "structure.reinforced"
+
+    MOON_EXTRACTION_UPDATE = "moon.extraction.update"
+    MOON_EXTRACTION_READY = "moon.extraction.ready"
+    MINING_LEDGER_UPDATE = "mining.ledger.update"
+
+    SOVEREIGNTY_UPDATE = "sovereignty.update"
+    SOVEREIGNTY_CAMPAIGN_START = "sovereignty.campaign.start"
+    SOVEREIGNTY_CAMPAIGN_END = "sovereignty.campaign.end"
+
+    ANALYTICS_UPDATE = "analytics.update"
+    PROFIT_LOSS_UPDATE = "profit_loss.update"
+    ISK_FLOW_UPDATE = "isk_flow.update"
+    PORTFOLIO_UPDATE = "portfolio.update"
+    MARKET_TREND_UPDATE = "market_trend.update"
+    TRADING_OPPORTUNITY_NEW = "trading_opportunity.new"
+
+    # Alliance events
+    ALLIANCE_UPDATE = "alliance.update"
+    ALLIANCE_CORPORATION_JOIN = "alliance.corporation.join"
+    ALLIANCE_CORPORATION_LEAVE = "alliance.corporation.leave"
+
+    # War events
+    WAR_UPDATE = "war.update"
+    WAR_START = "war.start"
+    WAR_END = "war.end"
+    WAR_ALLY_JOIN = "war.ally.join"
+
+    # Incursion events
+    INCURSION_NEW = "incursion.new"
+    INCURSION_UPDATE = "incursion.update"
+    INCURSION_END = "incursion.end"
+    INCURSION_PARTICIPATION = "incursion.participation"
+
+    # Faction Warfare events
+    FW_UPDATE = "faction_warfare.update"
+    FW_SYSTEM_CHANGE = "faction_warfare.system.change"
+    FW_CHARACTER_UPDATE = "faction_warfare.character.update"
+    FW_LEADERBOARD_UPDATE = "faction_warfare.leaderboard.update"
+
     # Sync status events
     SYNC_START = "sync.start"
     SYNC_PROGRESS = "sync.progress"
@@ -119,6 +161,14 @@ class Topic(str, Enum):
     SKILLS = "skills"
     CLONES = "clones"
     BOOKMARKS = "bookmarks"
+    STRUCTURES = "structures"
+    MOON_MINING = "moon_mining"
+    SOVEREIGNTY = "sovereignty"
+    ANALYTICS = "analytics"
+    ALLIANCES = "alliances"
+    WARS = "wars"
+    INCURSIONS = "incursions"
+    FACTION_WARFARE = "faction_warfare"
     SYNC_STATUS = "sync.status"
 
     # Admin topics (admin auth required)

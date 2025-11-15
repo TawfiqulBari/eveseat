@@ -31,6 +31,17 @@ const navigation = [
   { name: 'Skills', path: '/skills', icon: '📚' },
   { name: 'Clones', path: '/clones', icon: '👤' },
   { name: 'Bookmarks', path: '/bookmarks', icon: '🔖' },
+  { name: 'Structures', path: '/structures', icon: '🏗️' },
+  { name: 'Moon Mining', path: '/moon-mining', icon: '🌑' },
+  { name: 'Sovereignty', path: '/sovereignty', icon: '👑' },
+  { name: 'Analytics', path: '/analytics', icon: '📈' },
+  { name: 'Profit & Loss', path: '/profit-loss', icon: '💹' },
+  { name: 'Market Trends', path: '/market-trends', icon: '📊' },
+  { name: 'Industry Calc', path: '/industry-calculator', icon: '🧮' },
+  { name: 'Alliances', path: '/alliances', icon: '🤝' },
+  { name: 'Wars', path: '/wars', icon: '⚔️' },
+  { name: 'Incursions', path: '/incursions', icon: '🔴' },
+  { name: 'Faction Warfare', path: '/faction-warfare', icon: '🎖️' },
 ]
 
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
