@@ -39,6 +39,9 @@ from app.tasks.fitting_sync import sync_character_fittings
 from app.tasks.skill_sync import sync_character_skills
 from app.tasks.clone_sync import sync_character_clones
 from app.tasks.bookmark_sync import sync_character_bookmarks
+from app.tasks.structure_sync import sync_corporation_structures
+from app.tasks.moon_sync import sync_moon_extractions, sync_mining_ledger
+from app.tasks.sovereignty_sync import sync_sovereignty_data
 
 # Import all tasks to ensure they're registered
 __all__ = [
@@ -72,6 +75,10 @@ __all__ = [
     "sync_character_skills",
     "sync_character_clones",
     "sync_character_bookmarks",
+    "sync_corporation_structures",
+    "sync_moon_extractions",
+    "sync_mining_ledger",
+    "sync_sovereignty_data",
 ]
 
 # Celery Beat schedule configuration

@@ -7,7 +7,7 @@ from contextlib import asynccontextmanager
 
 from app.core.config import settings
 from app.core.security import get_rate_limiter
-from app.api.v1 import auth, characters, killmails, map, routes, corporations, market, fleets, mail, contacts, calendar, contracts, wallet, industry, blueprints, planetary, loyalty, fittings, skills, clones, bookmarks
+from app.api.v1 import auth, characters, killmails, map, routes, corporations, market, fleets, mail, contacts, calendar, contracts, wallet, industry, blueprints, planetary, loyalty, fittings, skills, clones, bookmarks, structures, moons, sov
 
 
 @asynccontextmanager
@@ -61,6 +61,9 @@ app.include_router(fittings.router, prefix="/fittings", tags=["fittings"])
 app.include_router(skills.router, prefix="/skills", tags=["skills"])
 app.include_router(clones.router, prefix="/clones", tags=["clones"])
 app.include_router(bookmarks.router, prefix="/bookmarks", tags=["bookmarks"])
+app.include_router(structures.router, prefix="/structures", tags=["structures"])
+app.include_router(moons.router, prefix="/moons", tags=["moons"])
+app.include_router(sov.router, prefix="/sov", tags=["sovereignty"])
 
 
 @app.get("/")

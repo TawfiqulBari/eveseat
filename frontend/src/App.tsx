@@ -23,6 +23,9 @@ const Fittings = lazy(() => import('./pages/Fittings'))
 const Skills = lazy(() => import('./pages/Skills'))
 const Clones = lazy(() => import('./pages/Clones'))
 const Bookmarks = lazy(() => import('./pages/Bookmarks'))
+const Structures = lazy(() => import('./pages/Structures'))
+const MoonMining = lazy(() => import('./pages/MoonMining'))
+const Sovereignty = lazy(() => import('./pages/Sovereignty'))
 const Login = lazy(() => import('./pages/Login'))
 const Callback = lazy(() => import('./pages/Callback'))
 
@@ -77,6 +80,9 @@ function ProtectedRoutes() {
         <Route path="/skills" element={<Skills />} />
         <Route path="/clones" element={<Clones />} />
         <Route path="/bookmarks" element={<Bookmarks />} />
+        <Route path="/structures" element={<Structures />} />
+        <Route path="/moon-mining" element={<MoonMining />} />
+        <Route path="/sovereignty" element={<Sovereignty />} />
       </Routes>
     </Layout>
   )

@@ -31,6 +31,9 @@ const navigation = [
   { name: 'Skills', path: '/skills', icon: '📚' },
   { name: 'Clones', path: '/clones', icon: '👤' },
   { name: 'Bookmarks', path: '/bookmarks', icon: '🔖' },
+  { name: 'Structures', path: '/structures', icon: '🏗️' },
+  { name: 'Moon Mining', path: '/moon-mining', icon: '🌑' },
+  { name: 'Sovereignty', path: '/sovereignty', icon: '👑' },
 ]
 
 export const Layout: React.FC<LayoutProps> = ({ children }) => {

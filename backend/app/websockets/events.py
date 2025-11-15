@@ -87,6 +87,18 @@ class EventType(str, Enum):
     BOOKMARK_DELETE = "bookmark.delete"
     BOOKMARK_FOLDER_UPDATE = "bookmark.folder.update"
 
+    STRUCTURE_UPDATE = "structure.update"
+    STRUCTURE_FUEL_LOW = "structure.fuel.low"
+    STRUCTURE_REINFORCED = "structure.reinforced"
+
+    MOON_EXTRACTION_UPDATE = "moon.extraction.update"
+    MOON_EXTRACTION_READY = "moon.extraction.ready"
+    MINING_LEDGER_UPDATE = "mining.ledger.update"
+
+    SOVEREIGNTY_UPDATE = "sovereignty.update"
+    SOVEREIGNTY_CAMPAIGN_START = "sovereignty.campaign.start"
+    SOVEREIGNTY_CAMPAIGN_END = "sovereignty.campaign.end"
+
     # Sync status events
     SYNC_START = "sync.start"
     SYNC_PROGRESS = "sync.progress"
@@ -119,6 +131,9 @@ class Topic(str, Enum):
     SKILLS = "skills"
     CLONES = "clones"
     BOOKMARKS = "bookmarks"
+    STRUCTURES = "structures"
+    MOON_MINING = "moon_mining"
+    SOVEREIGNTY = "sovereignty"
     SYNC_STATUS = "sync.status"
 
     # Admin topics (admin auth required)
