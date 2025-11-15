@@ -1,9 +1,7 @@
 /**
  * Structures API service
  */
-import axios from 'axios'
-
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000'
+import api from './api'
 
 export interface Structure {
   id: number
@@ -41,38 +39,23 @@ interface ListStructuresParams {
   offset?: number
 }
 
-const getAuthHeader = () => {
-  const token = localStorage.getItem('access_token')
-  return {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  }
-}
-
 export const structuresService = {
   async listStructures(params: ListStructuresParams): Promise<Structure[]> {
-    const response = await axios.get(`${API_BASE_URL}/structures/`, {
-      params,
-      ...getAuthHeader(),
-    })
+    const response = await api.get('/structures/', { params })
     return response.data
   },
 
   async getStructure(structureId: number): Promise<Structure> {
-    const response = await axios.get(`${API_BASE_URL}/structures/${structureId}`, getAuthHeader())
+    const response = await api.get(`/structures/${structureId}`)
     return response.data
   },
 
   async getStatistics(corporationId: number): Promise<StructureStatistics> {
-    const response = await axios.get(
-      `${API_BASE_URL}/structures/statistics/${corporationId}`,
-      getAuthHeader()
-    )
+    const response = await api.get(`/structures/statistics/${corporationId}`)
     return response.data
   },
 
   async triggerSync(corporationId: number): Promise<void> {
-    await axios.post(`${API_BASE_URL}/structures/sync/${corporationId}`, {}, getAuthHeader())
+    await api.post(`/structures/sync/${corporationId}`)
   },
 }

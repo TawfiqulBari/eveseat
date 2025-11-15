@@ -1,11 +1,4 @@
-import axios from 'axios'
-
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000'
-
-const getAuthHeader = () => {
-  const token = localStorage.getItem('access_token')
-  return token ? { headers: { Authorization: `Bearer ${token}` } } : {}
-}
+import api from './api'
 
 export interface War {
   id: number
@@ -55,51 +48,32 @@ export interface WarStatistics {
 
 export const warsService = {
   async listWars(activeOnly: boolean = true): Promise<War[]> {
-    const response = await axios.get(`${API_BASE_URL}/wars/`, {
+    const response = await api.get('/wars/', {
       params: { active_only: activeOnly },
-      ...getAuthHeader(),
     })
     return response.data
   },
 
   async getWar(warId: number): Promise<War> {
-    const response = await axios.get(`${API_BASE_URL}/wars/${warId}`, {
-      ...getAuthHeader(),
-    })
+    const response = await api.get(`/wars/${warId}`)
     return response.data
   },
 
   async getWarKillmails(warId: number): Promise<WarKillmail[]> {
-    const response = await axios.get(`${API_BASE_URL}/wars/${warId}/killmails`, {
-      ...getAuthHeader(),
-    })
+    const response = await api.get(`/wars/${warId}/killmails`)
     return response.data
   },
 
   async getWarStatistics(): Promise<WarStatistics> {
-    const response = await axios.get(`${API_BASE_URL}/wars/statistics`, {
-      ...getAuthHeader(),
-    })
+    const response = await api.get('/wars/statistics')
     return response.data
   },
 
   async syncWars(): Promise<void> {
-    await axios.post(
-      `${API_BASE_URL}/wars/sync`,
-      {},
-      {
-        ...getAuthHeader(),
-      }
-    )
+    await api.post('/wars/sync')
   },
 
   async syncWarKillmails(warId: number): Promise<void> {
-    await axios.post(
-      `${API_BASE_URL}/wars/${warId}/killmails/sync`,
-      {},
-      {
-        ...getAuthHeader(),
-      }
-    )
+    await api.post(`/wars/${warId}/killmails/sync`)
   },
 }

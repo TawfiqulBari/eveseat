@@ -1,9 +1,7 @@
 /**
  * Moon mining API service
  */
-import axios from 'axios'
-
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000'
+import api from './api'
 
 export interface MoonExtraction {
   id: number
@@ -73,68 +71,39 @@ interface ListLedgerParams {
   offset?: number
 }
 
-const getAuthHeader = () => {
-  const token = localStorage.getItem('access_token')
-  return {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  }
-}
-
 export const moonsService = {
   async listExtractions(params: ListExtractionsParams): Promise<MoonExtraction[]> {
-    const response = await axios.get(`${API_BASE_URL}/moons/extractions`, {
-      params,
-      ...getAuthHeader(),
-    })
+    const response = await api.get('/moons/extractions', { params })
     return response.data
   },
 
   async getExtractionStatistics(corporationId: number): Promise<MoonExtractionStatistics> {
-    const response = await axios.get(
-      `${API_BASE_URL}/moons/extractions/statistics/${corporationId}`,
-      getAuthHeader()
-    )
+    const response = await api.get(`/moons/extractions/statistics/${corporationId}`)
     return response.data
   },
 
   async listMoons(params: ListMoonsParams): Promise<Moon[]> {
-    const response = await axios.get(`${API_BASE_URL}/moons/moons`, {
-      params,
-      ...getAuthHeader(),
-    })
+    const response = await api.get('/moons/moons', { params })
     return response.data
   },
 
   async listLedger(params: ListLedgerParams): Promise<MiningLedger[]> {
-    const response = await axios.get(`${API_BASE_URL}/moons/ledger`, {
-      params,
-      ...getAuthHeader(),
-    })
+    const response = await api.get('/moons/ledger', { params })
     return response.data
   },
 
   async getLedgerStatistics(corporationId: number, days: number = 30): Promise<MiningStatistics> {
-    const response = await axios.get(
-      `${API_BASE_URL}/moons/ledger/statistics/${corporationId}`,
-      {
-        params: { days },
-        ...getAuthHeader(),
-      }
-    )
+    const response = await api.get(`/moons/ledger/statistics/${corporationId}`, {
+      params: { days },
+    })
     return response.data
   },
 
   async triggerExtractionSync(corporationId: number): Promise<void> {
-    await axios.post(
-      `${API_BASE_URL}/moons/extractions/sync/${corporationId}`,
-      {},
-      getAuthHeader()
-    )
+    await api.post(`/moons/extractions/sync/${corporationId}`)
   },
 
   async triggerLedgerSync(corporationId: number): Promise<void> {
-    await axios.post(`${API_BASE_URL}/moons/ledger/sync/${corporationId}`, {}, getAuthHeader())
+    await api.post(`/moons/ledger/sync/${corporationId}`)
   },
 }

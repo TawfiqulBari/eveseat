@@ -1,9 +1,7 @@
 /**
  * Sovereignty API service
  */
-import axios from 'axios'
-
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000'
+import api from './api'
 
 export interface SystemSovereignty {
   id: number
@@ -72,51 +70,33 @@ interface ListCampaignsParams {
   offset?: number
 }
 
-const getAuthHeader = () => {
-  const token = localStorage.getItem('access_token')
-  return {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  }
-}
-
 export const sovereigntyService = {
   async listSystems(params: ListSystemsParams): Promise<SystemSovereignty[]> {
-    const response = await axios.get(`${API_BASE_URL}/sov/systems`, {
-      params,
-      ...getAuthHeader(),
-    })
+    const response = await api.get('/sov/systems', { params })
     return response.data
   },
 
   async getSystem(systemId: number): Promise<SystemSovereignty> {
-    const response = await axios.get(`${API_BASE_URL}/sov/systems/${systemId}`, getAuthHeader())
+    const response = await api.get(`/sov/systems/${systemId}`)
     return response.data
   },
 
   async listStructures(params: ListStructuresParams): Promise<SovereigntyStructure[]> {
-    const response = await axios.get(`${API_BASE_URL}/sov/structures`, {
-      params,
-      ...getAuthHeader(),
-    })
+    const response = await api.get('/sov/structures', { params })
     return response.data
   },
 
   async listCampaigns(params: ListCampaignsParams): Promise<SovereigntyCampaign[]> {
-    const response = await axios.get(`${API_BASE_URL}/sov/campaigns`, {
-      params,
-      ...getAuthHeader(),
-    })
+    const response = await api.get('/sov/campaigns', { params })
     return response.data
   },
 
   async getStatistics(): Promise<SovereigntyStatistics> {
-    const response = await axios.get(`${API_BASE_URL}/sov/statistics`, getAuthHeader())
+    const response = await api.get('/sov/statistics')
     return response.data
   },
 
   async triggerSync(): Promise<void> {
-    await axios.post(`${API_BASE_URL}/sov/sync`, {}, getAuthHeader())
+    await api.post('/sov/sync')
   },
 }

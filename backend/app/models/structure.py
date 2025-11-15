@@ -48,7 +48,7 @@ class Structure(Base):
     synced_at = Column(DateTime(timezone=True))
 
     # Relationships
-    corporation = relationship("Corporation", back_populates="structures")
+    corporation = relationship("Corporation", overlaps="structures")
     vulnerabilities = relationship("StructureVulnerability", back_populates="structure", cascade="all, delete-orphan")
 
 

@@ -36,7 +36,7 @@ class EveToken(Base):
     
     # Relationships
     user = relationship("User", back_populates="eve_tokens")
-    character = relationship("Character", foreign_keys=[character_id], primaryjoin="EveToken.character_id == Character.character_id", uselist=False)
+    character = relationship("Character", foreign_keys=[character_id], primaryjoin="EveToken.character_id == Character.character_id", uselist=False, overlaps="eve_token")
     
     # Indexes for efficient queries
     __table_args__ = (

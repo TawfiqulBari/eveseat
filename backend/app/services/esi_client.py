@@ -182,9 +182,17 @@ class ESIClient:
                 auth=auth,
             )
             response.raise_for_status()
-            return response.json()
+            token_data = response.json()
+
+            # Log response structure (without sensitive values)
+            response_keys = list(token_data.keys()) if isinstance(token_data, dict) else []
+            logger.info(f"Token exchange successful. Response keys: {response_keys}")
+            logger.info(f"Has access_token: {('access_token' in token_data) if isinstance(token_data, dict) else False}")
+            logger.info(f"Has refresh_token: {('refresh_token' in token_data) if isinstance(token_data, dict) else False}")
+
+            return token_data
         except httpx.HTTPStatusError as e:
-            logger.error(f"Token exchange failed: {e.response.text}")
+            logger.error(f"Token exchange HTTP error {e.response.status_code}: {e.response.text}")
             raise ESITokenError(f"Failed to exchange code for token: {e.response.text}")
         except Exception as e:
             logger.error(f"Token exchange error: {e}")
@@ -359,8 +367,9 @@ class ESIClient:
                     cached_data = await self.get_cached_response(endpoint)
                     if cached_data:
                         return cached_data
-                    # If no cache, treat as 200
-                    response = await self.client.request(method, url, headers={**headers, "If-None-Match": None}, params=params)
+                    # If no cache, retry without ETag
+                    retry_headers = {k: v for k, v in headers.items() if k != "If-None-Match"}
+                    response = await self.client.request(method, url, headers=retry_headers, params=params)
                 
                 # Handle rate limiting
                 if response.status_code == 429:

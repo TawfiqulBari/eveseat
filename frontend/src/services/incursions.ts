@@ -1,11 +1,4 @@
-import axios from 'axios'
-
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000'
-
-const getAuthHeader = () => {
-  const token = localStorage.getItem('access_token')
-  return token ? { headers: { Authorization: `Bearer ${token}` } } : {}
-}
+import api from './api'
 
 export interface Incursion {
   id: number
@@ -50,50 +43,31 @@ export interface IncursionSummary {
 
 export const incursionsService = {
   async listIncursions(activeOnly: boolean = true): Promise<Incursion[]> {
-    const response = await axios.get(`${API_BASE_URL}/incursions/`, {
+    const response = await api.get('/incursions/', {
       params: { active_only: activeOnly },
-      ...getAuthHeader(),
     })
     return response.data
   },
 
   async getIncursion(constellationId: number): Promise<Incursion> {
-    const response = await axios.get(
-      `${API_BASE_URL}/incursions/${constellationId}`,
-      {
-        ...getAuthHeader(),
-      }
-    )
+    const response = await api.get(`/incursions/${constellationId}`)
     return response.data
   },
 
   async getIncursionStatistics(
     constellationId: number
   ): Promise<IncursionStatistics> {
-    const response = await axios.get(
-      `${API_BASE_URL}/incursions/${constellationId}/statistics`,
-      {
-        ...getAuthHeader(),
-      }
-    )
+    const response = await api.get(`/incursions/${constellationId}/statistics`)
     return response.data
   },
 
   async getIncursionSummary(): Promise<IncursionSummary> {
-    const response = await axios.get(`${API_BASE_URL}/incursions/summary`, {
-      ...getAuthHeader(),
-    })
+    const response = await api.get('/incursions/summary')
     return response.data
   },
 
   async syncIncursions(): Promise<void> {
-    await axios.post(
-      `${API_BASE_URL}/incursions/sync`,
-      {},
-      {
-        ...getAuthHeader(),
-      }
-    )
+    await api.post('/incursions/sync')
   },
 
   async recordParticipation(
@@ -102,17 +76,11 @@ export const incursionsService = {
     siteType: string,
     iskEarned: number
   ): Promise<void> {
-    await axios.post(
-      `${API_BASE_URL}/incursions/participation`,
-      {
-        character_id: characterId,
-        constellation_id: constellationId,
-        site_type: siteType,
-        isk_earned: iskEarned,
-      },
-      {
-        ...getAuthHeader(),
-      }
-    )
+    await api.post('/incursions/participation', {
+      character_id: characterId,
+      constellation_id: constellationId,
+      site_type: siteType,
+      isk_earned: iskEarned,
+    })
   },
 }

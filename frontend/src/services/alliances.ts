@@ -1,11 +1,4 @@
-import axios from 'axios'
-
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000'
-
-const getAuthHeader = () => {
-  const token = localStorage.getItem('access_token')
-  return token ? { headers: { Authorization: `Bearer ${token}` } } : {}
-}
+import api from './api'
 
 export interface Alliance {
   id: number
@@ -54,46 +47,26 @@ export interface AllianceStatistics {
 
 export const alliancesService = {
   async listAlliances(): Promise<Alliance[]> {
-    const response = await axios.get(`${API_BASE_URL}/alliances/`, {
-      ...getAuthHeader(),
-    })
+    const response = await api.get('/alliances/')
     return response.data
   },
 
   async getAlliance(allianceId: number): Promise<Alliance> {
-    const response = await axios.get(`${API_BASE_URL}/alliances/${allianceId}`, {
-      ...getAuthHeader(),
-    })
+    const response = await api.get(`/alliances/${allianceId}`)
     return response.data
   },
 
   async getAllianceStatistics(allianceId: number): Promise<AllianceStatistics> {
-    const response = await axios.get(
-      `${API_BASE_URL}/alliances/${allianceId}/statistics`,
-      {
-        ...getAuthHeader(),
-      }
-    )
+    const response = await api.get(`/alliances/${allianceId}/statistics`)
     return response.data
   },
 
   async syncAlliance(allianceId: number): Promise<void> {
-    await axios.post(
-      `${API_BASE_URL}/alliances/${allianceId}/sync`,
-      {},
-      {
-        ...getAuthHeader(),
-      }
-    )
+    await api.post(`/alliances/${allianceId}/sync`)
   },
 
   async listAllianceCorporations(allianceId: number): Promise<AllianceCorporation[]> {
-    const response = await axios.get(
-      `${API_BASE_URL}/alliances/${allianceId}/corporations`,
-      {
-        ...getAuthHeader(),
-      }
-    )
+    const response = await api.get(`/alliances/${allianceId}/corporations`)
     return response.data
   },
 }

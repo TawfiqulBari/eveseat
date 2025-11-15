@@ -44,19 +44,17 @@ class Settings(BaseSettings):
     ESI_SCOPES: List[str] = [
         # Essential character information
         "esi-characters.read_corporation_roles.v1",
-        "esi-characters.read_corporation_membership.v1",
         # Character assets and wallet
         "esi-assets.read_assets.v1",  # Personal character assets
-        "esi-characters.read_wallet.v1",  # Personal wallet
-        "esi-wallet.read_character_wallet.v1",  # Detailed wallet transactions
+        "esi-wallet.read_character_wallet.v1",  # Character wallet transactions
         # Character location and ship
         "esi-location.read_location.v1",
-        "esi-characters.read_ship_type.v1",
+        "esi-location.read_ship_type.v1",  # FIXED: was esi-characters.read_ship_type.v1
         # Character skills
-        "esi-characters.read_skillqueue.v1",
-        "esi-characters.read_skills.v1",
+        "esi-skills.read_skillqueue.v1",  # FIXED: was esi-characters.read_skillqueue.v1
+        "esi-skills.read_skills.v1",  # FIXED: was esi-characters.read_skills.v1
         # Personal market orders
-        "esi-markets.read_character_orders.v1",  # Personal market orders
+        "esi-markets.read_character_orders.v1",
         # Corporation data (if user has access)
         "esi-corporations.read_corporation_membership.v1",
         "esi-assets.read_corporation_assets.v1",
@@ -85,11 +83,10 @@ class Settings(BaseSettings):
         # Clones
         "esi-clones.read_clones.v1",
         "esi-clones.read_implants.v1",
-        # Bookmarks
-        "esi-bookmarks.read_character_bookmarks.v1",
         # Industry
         "esi-industry.read_character_jobs.v1",
         "esi-industry.read_corporation_jobs.v1",
+        "esi-industry.read_corporation_mining.v1",  # Corporation mining ledger
         # Blueprints
         "esi-characters.read_blueprints.v1",
         # Planets

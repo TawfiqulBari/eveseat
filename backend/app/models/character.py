@@ -44,7 +44,7 @@ class Character(Base):
     
     # Relationships
     user = relationship("User", back_populates="characters")
-    eve_token = relationship("EveToken", foreign_keys="EveToken.character_id", primaryjoin="Character.character_id == EveToken.character_id", uselist=False)
+    eve_token = relationship("EveToken", foreign_keys="EveToken.character_id", primaryjoin="Character.character_id == EveToken.character_id", uselist=False, overlaps="character")
     mails = relationship("Mail", back_populates="character", cascade="all, delete-orphan")
     mail_labels = relationship("MailLabel", back_populates="character", cascade="all, delete-orphan")
     mailing_lists = relationship("MailingList", back_populates="character", cascade="all, delete-orphan")

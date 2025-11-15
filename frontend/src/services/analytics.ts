@@ -1,9 +1,7 @@
 /**
  * Analytics API service
  */
-import axios from 'axios'
-
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000'
+import api from './api'
 
 export interface MarketTrend {
   id: number
@@ -146,15 +144,6 @@ export interface AnalyticsDashboard {
   }
 }
 
-const getAuthHeader = () => {
-  const token = localStorage.getItem('access_token')
-  return {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  }
-}
-
 export const analyticsService = {
   // Profit/Loss endpoints
   async listProfitLoss(params: {
@@ -164,30 +153,19 @@ export const analyticsService = {
     limit?: number
     offset?: number
   }): Promise<ProfitLoss[]> {
-    const response = await axios.get(`${API_BASE_URL}/analytics/profit-loss`, {
-      params,
-      ...getAuthHeader(),
-    })
+    const response = await api.get('/analytics/profit-loss', { params })
     return response.data
   },
 
   async getProfitLossSummary(characterId: number, days: number = 30): Promise<ProfitLossSummary> {
-    const response = await axios.get(
-      `${API_BASE_URL}/analytics/profit-loss/summary`,
-      {
-        params: { character_id: characterId, days },
-        ...getAuthHeader(),
-      }
-    )
+    const response = await api.get('/analytics/profit-loss/summary', {
+      params: { character_id: characterId, days },
+    })
     return response.data
   },
 
   async triggerProfitLossCalculation(characterId: number, days: number = 30): Promise<void> {
-    await axios.post(
-      `${API_BASE_URL}/analytics/profit-loss/calculate/${characterId}`,
-      {},
-      { params: { days }, ...getAuthHeader() }
-    )
+    await api.post(`/analytics/profit-loss/calculate/${characterId}`, {}, { params: { days } })
   },
 
   // ISK Flow endpoints
@@ -200,27 +178,19 @@ export const analyticsService = {
     limit?: number
     offset?: number
   }): Promise<ISKFlow[]> {
-    const response = await axios.get(`${API_BASE_URL}/analytics/isk-flow`, {
-      params,
-      ...getAuthHeader(),
-    })
+    const response = await api.get('/analytics/isk-flow', { params })
     return response.data
   },
 
   async getISKFlowSummary(characterId: number, days: number = 30): Promise<ISKFlowSummary> {
-    const response = await axios.get(`${API_BASE_URL}/analytics/isk-flow/summary`, {
+    const response = await api.get('/analytics/isk-flow/summary', {
       params: { character_id: characterId, days },
-      ...getAuthHeader(),
     })
     return response.data
   },
 
   async triggerISKFlowAggregation(characterId: number, days: number = 30): Promise<void> {
-    await axios.post(
-      `${API_BASE_URL}/analytics/isk-flow/aggregate/${characterId}`,
-      {},
-      { params: { days }, ...getAuthHeader() }
-    )
+    await api.post(`/analytics/isk-flow/aggregate/${characterId}`, {}, { params: { days } })
   },
 
   // Industry Profitability endpoints
@@ -231,10 +201,7 @@ export const analyticsService = {
     limit?: number
     offset?: number
   }): Promise<IndustryProfitability[]> {
-    const response = await axios.get(`${API_BASE_URL}/analytics/industry/profitability`, {
-      params,
-      ...getAuthHeader(),
-    })
+    const response = await api.get('/analytics/industry/profitability', { params })
     return response.data
   },
 
@@ -242,22 +209,14 @@ export const analyticsService = {
     characterId: number,
     days: number = 30
   ): Promise<IndustryProfitabilitySummary> {
-    const response = await axios.get(
-      `${API_BASE_URL}/analytics/industry/profitability/summary`,
-      {
-        params: { character_id: characterId, days },
-        ...getAuthHeader(),
-      }
-    )
+    const response = await api.get('/analytics/industry/profitability/summary', {
+      params: { character_id: characterId, days },
+    })
     return response.data
   },
 
   async triggerIndustryProfitabilityCalculation(characterId: number): Promise<void> {
-    await axios.post(
-      `${API_BASE_URL}/analytics/industry/profitability/calculate/${characterId}`,
-      {},
-      getAuthHeader()
-    )
+    await api.post(`/analytics/industry/profitability/calculate/${characterId}`)
   },
 
   // Market Trends endpoints
@@ -266,9 +225,8 @@ export const analyticsService = {
     regionId: number = 10000002,
     days: number = 30
   ): Promise<MarketTrend[]> {
-    const response = await axios.get(`${API_BASE_URL}/analytics/market/trends`, {
+    const response = await api.get('/analytics/market/trends', {
       params: { type_id: typeId, region_id: regionId, days },
-      ...getAuthHeader(),
     })
     return response.data
   },
@@ -277,9 +235,8 @@ export const analyticsService = {
     typeId: number,
     regionId: number = 10000002
   ): Promise<MarketTrendSummary> {
-    const response = await axios.get(`${API_BASE_URL}/analytics/market/trends/summary`, {
+    const response = await api.get('/analytics/market/trends/summary', {
       params: { type_id: typeId, region_id: regionId },
-      ...getAuthHeader(),
     })
     return response.data
   },
@@ -288,14 +245,9 @@ export const analyticsService = {
     typeIds: number[],
     regionId: number = 10000002
   ): Promise<void> {
-    await axios.post(
-      `${API_BASE_URL}/analytics/market/trends/calculate`,
-      {},
-      {
-        params: { type_ids: typeIds, region_id: regionId },
-        ...getAuthHeader(),
-      }
-    )
+    await api.post('/analytics/market/trends/calculate', {}, {
+      params: { type_ids: typeIds, region_id: regionId },
+    })
   },
 
   // Trading Opportunities endpoints
@@ -305,50 +257,33 @@ export const analyticsService = {
     risk_level?: string
     limit?: number
   }): Promise<TradingOpportunity[]> {
-    const response = await axios.get(`${API_BASE_URL}/analytics/trading/opportunities`, {
-      params,
-      ...getAuthHeader(),
-    })
+    const response = await api.get('/analytics/trading/opportunities', { params })
     return response.data
   },
 
   async triggerFindTradingOpportunities(regionIds: number[]): Promise<void> {
-    await axios.post(
-      `${API_BASE_URL}/analytics/trading/opportunities/find`,
-      {},
-      {
-        params: { region_ids: regionIds },
-        ...getAuthHeader(),
-      }
-    )
+    await api.post('/analytics/trading/opportunities/find', {}, {
+      params: { region_ids: regionIds },
+    })
   },
 
   // Portfolio endpoints
   async listPortfolioSnapshots(characterId: number, days: number = 30): Promise<PortfolioSnapshot[]> {
-    const response = await axios.get(`${API_BASE_URL}/analytics/portfolio/snapshots`, {
+    const response = await api.get('/analytics/portfolio/snapshots', {
       params: { character_id: characterId, days },
-      ...getAuthHeader(),
     })
     return response.data
   },
 
   async triggerPortfolioSnapshot(characterId: number): Promise<void> {
-    await axios.post(
-      `${API_BASE_URL}/analytics/portfolio/snapshot/${characterId}`,
-      {},
-      getAuthHeader()
-    )
+    await api.post(`/analytics/portfolio/snapshot/${characterId}`)
   },
 
   // Analytics Dashboard
   async getDashboard(characterId: number, days: number = 30): Promise<AnalyticsDashboard> {
-    const response = await axios.get(
-      `${API_BASE_URL}/analytics/dashboard/${characterId}`,
-      {
-        params: { days },
-        ...getAuthHeader(),
-      }
-    )
+    const response = await api.get(`/analytics/dashboard/${characterId}`, {
+      params: { days },
+    })
     return response.data
   },
 }

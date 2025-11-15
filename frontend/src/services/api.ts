@@ -1,7 +1,9 @@
 import axios from 'axios'
 import { logger } from '../utils/logger'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+// Use environment variable or construct from current location
+const API_URL = import.meta.env.VITE_API_URL ||
+  (typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.host}/api/v1` : '/api/v1')
 
 export const api = axios.create({
   baseURL: API_URL,

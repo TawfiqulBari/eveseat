@@ -65,6 +65,9 @@ async def callback(
         Redirect to frontend with success message or error
     """
     try:
+        # Log callback parameters (without sensitive code)
+        logger.info(f"OAuth callback received. State: {state[:10] if state else None}..., Code length: {len(code) if code else 0}")
+
         # Retrieve PKCE code verifier
         code_verifier = esi_client.get_pkce_verifier(state or "")
         if not code_verifier:
@@ -79,13 +82,23 @@ async def callback(
             code_verifier=code_verifier,
             state=state,
         )
-        
+
+        logger.info(f"Token response keys: {token_response.keys()}")
+
         access_token = token_response.get("access_token")
         refresh_token = token_response.get("refresh_token")
         expires_in = token_response.get("expires_in", 1200)  # Default 20 minutes
         token_type = token_response.get("token_type", "Bearer")
         scope = token_response.get("scope", "")
-        
+
+        # Validate required tokens
+        if not access_token:
+            logger.error("No access_token in response")
+            raise ESITokenError("No access token received from EVE SSO")
+        if not refresh_token:
+            logger.error("No refresh_token in response")
+            raise ESITokenError("No refresh token received from EVE SSO")
+
         # Verify token and get character info
         character_info = await esi_client.verify_token(access_token)
         character_id = character_info.get("CharacterID")
@@ -185,18 +198,53 @@ async def callback(
         
         db.commit()
         
-        # Trigger character sync tasks in the background
+        # Trigger comprehensive character sync tasks in the background
+        # Stagger tasks to respect ESI rate limits
         try:
-            from app.tasks.character_sync import (
-                sync_character_assets,
-                sync_character_market_orders,
-                sync_character_details,
-            )
-            # Queue sync tasks (they'll run asynchronously)
-            sync_character_assets.delay(character_id)
-            sync_character_market_orders.delay(character_id)
-            sync_character_details.delay(character_id)
-            logger.info(f"Queued character sync tasks for character {character_id}")
+            # Import all character-level sync tasks
+            from app.tasks.character_sync import sync_character_details, sync_character_assets, sync_character_market_orders
+            from app.tasks.wallet_sync import sync_character_wallet
+            from app.tasks.mail_sync import sync_character_mail
+            from app.tasks.contact_sync import sync_character_contacts
+            from app.tasks.calendar_sync import sync_character_calendar
+            from app.tasks.contract_sync import sync_character_contracts
+            from app.tasks.clone_sync import sync_character_clones
+            from app.tasks.skill_sync import sync_character_skills
+            from app.tasks.fitting_sync import sync_character_fittings
+            from app.tasks.blueprint_sync import sync_character_blueprints
+            from app.tasks.planetary_sync import sync_character_planets
+            from app.tasks.loyalty_sync import sync_character_loyalty
+            from app.tasks.industry_sync import sync_character_industry
+            from app.tasks.bookmark_sync import sync_character_bookmarks
+
+            # Queue sync tasks with staggered countdown (delay in seconds)
+            # High priority tasks first (user profile data)
+            sync_character_details.apply_async((character_id,), countdown=1)
+            sync_character_skills.apply_async((character_id,), countdown=2)
+            sync_character_clones.apply_async((character_id,), countdown=3)
+
+            # Medium priority (financial/assets)
+            sync_character_wallet.apply_async((character_id,), countdown=4)
+            sync_character_assets.apply_async((character_id,), countdown=6)
+            sync_character_market_orders.apply_async((character_id,), countdown=8)
+
+            # Communication & social
+            sync_character_mail.apply_async((character_id,), countdown=10)
+            sync_character_contacts.apply_async((character_id,), countdown=12)
+            sync_character_calendar.apply_async((character_id,), countdown=14)
+
+            # Contracts & industry
+            sync_character_contracts.apply_async((character_id,), countdown=16)
+            sync_character_industry.apply_async((character_id,), countdown=18)
+            sync_character_blueprints.apply_async((character_id,), countdown=20)
+
+            # Lower priority (nice to have)
+            sync_character_fittings.apply_async((character_id,), countdown=22)
+            sync_character_planets.apply_async((character_id,), countdown=24)
+            sync_character_loyalty.apply_async((character_id,), countdown=26)
+            sync_character_bookmarks.apply_async((character_id,), countdown=28)
+
+            logger.info(f"Queued 16 character sync tasks for character {character_id} with staggered delays")
         except Exception as e:
             logger.warning(f"Failed to queue character sync tasks: {e}")
         
@@ -211,7 +259,9 @@ async def callback(
             url=f"{settings.ALLOWED_ORIGINS}/auth/callback?error=token_error"
         )
     except Exception as e:
+        import traceback
         logger.error(f"Callback error: {e}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
         db.rollback()
         return RedirectResponse(
             url=f"{settings.ALLOWED_ORIGINS}/auth/callback?error=server_error"

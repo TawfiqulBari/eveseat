@@ -1,11 +1,4 @@
-import axios from 'axios'
-
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000'
-
-const getAuthHeader = () => {
-  const token = localStorage.getItem('access_token')
-  return token ? { headers: { Authorization: `Bearer ${token}` } } : {}
-}
+import api from './api'
 
 export interface FactionWarfareSystem {
   id: number
@@ -71,82 +64,49 @@ export interface FactionWarfareSummary {
 
 export const factionWarfareService = {
   async listSystems(contestedOnly: boolean = false): Promise<FactionWarfareSystem[]> {
-    const response = await axios.get(`${API_BASE_URL}/faction-warfare/systems`, {
+    const response = await api.get('/faction-warfare/systems', {
       params: { contested_only: contestedOnly },
-      ...getAuthHeader(),
     })
     return response.data
   },
 
   async getSystem(systemId: number): Promise<FactionWarfareSystem> {
-    const response = await axios.get(
-      `${API_BASE_URL}/faction-warfare/systems/${systemId}`,
-      {
-        ...getAuthHeader(),
-      }
-    )
+    const response = await api.get(`/faction-warfare/systems/${systemId}`)
     return response.data
   },
 
   async getStatistics(): Promise<FactionWarfareStatistics[]> {
-    const response = await axios.get(`${API_BASE_URL}/faction-warfare/statistics`, {
-      ...getAuthHeader(),
-    })
+    const response = await api.get('/faction-warfare/statistics')
     return response.data
   },
 
   async getFactionStatistics(factionId: number): Promise<FactionWarfareStatistics> {
-    const response = await axios.get(
-      `${API_BASE_URL}/faction-warfare/statistics/${factionId}`,
-      {
-        ...getAuthHeader(),
-      }
-    )
+    const response = await api.get(`/faction-warfare/statistics/${factionId}`)
     return response.data
   },
 
   async getSummary(): Promise<FactionWarfareSummary> {
-    const response = await axios.get(`${API_BASE_URL}/faction-warfare/summary`, {
-      ...getAuthHeader(),
-    })
+    const response = await api.get('/faction-warfare/summary')
     return response.data
   },
 
   async getCharacterStats(characterId: number): Promise<CharacterFactionWarfare> {
-    const response = await axios.get(
-      `${API_BASE_URL}/faction-warfare/character/${characterId}`,
-      {
-        ...getAuthHeader(),
-      }
-    )
+    const response = await api.get(`/faction-warfare/character/${characterId}`)
     return response.data
   },
 
   async getLeaderboard(statType: string = 'kills_yesterday'): Promise<FactionWarfareLeaderboard[]> {
-    const response = await axios.get(`${API_BASE_URL}/faction-warfare/leaderboard`, {
+    const response = await api.get('/faction-warfare/leaderboard', {
       params: { stat_type: statType },
-      ...getAuthHeader(),
     })
     return response.data
   },
 
   async syncSystems(): Promise<void> {
-    await axios.post(
-      `${API_BASE_URL}/faction-warfare/sync`,
-      {},
-      {
-        ...getAuthHeader(),
-      }
-    )
+    await api.post('/faction-warfare/sync')
   },
 
   async syncCharacterStats(characterId: number): Promise<void> {
-    await axios.post(
-      `${API_BASE_URL}/faction-warfare/character/${characterId}/sync`,
-      {},
-      {
-        ...getAuthHeader(),
-      }
-    )
+    await api.post(`/faction-warfare/character/${characterId}/sync`)
   },
 }

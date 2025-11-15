@@ -2,6 +2,25 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## ⚠️ PROJECT STATUS: ABANDONED
+
+**Date**: 2025-11-15
+**Status**: Development halted due to persistent technical issues
+
+### Critical Issues
+1. **Mixed Content Errors**: HTTPS page loading HTTP resources despite multiple refactoring attempts
+2. **Container Networking**: Frequent IP address changes breaking reverse proxy routing
+3. **Browser Caching**: Inability to properly deploy frontend updates
+4. **Infrastructure Complexity**: Nginx reverse proxy configuration requires manual IP updates on every container restart
+
+### Lessons Learned
+- Hardcoded container IPs in reverse proxy configs are not maintainable
+- Need service discovery or DNS-based routing for container communication
+- Frontend deployment strategy needs cache-busting headers
+- Docker networking should use service names, not IP addresses
+
+---
+
 ## Project Overview
 
 This is an EVE Online management platform designed as a Docker-based, multi-tenant application. It integrates with EVE Online's ESI (EVE Swagger Interface) API to provide comprehensive character and corporation management:
@@ -31,7 +50,7 @@ This is an EVE Online management platform designed as a Docker-based, multi-tena
 - **Ship Fittings**: Ship fitting management with module tracking and detailed item breakdown
 - **Skills**: Character skills tracking, skill queue monitoring, and skillpoint statistics
 - **Jump Clones**: Jump clone management with implant tracking and clone history
-- **Bookmarks**: Location bookmarks with folder organization and coordinate tracking
+- **Bookmarks**: ⚠️ UNAVAILABLE - ESI bookmark endpoints permanently disabled by CCP Games as of 2025
 
 ### Corporation Features (Phase 5 - COMPLETE)
 - **Structures**: Corporation structure management with fuel tracking and reinforcement schedules
