@@ -1,245 +1,592 @@
-# Deployment Guide
+# EVE Seat - Production Deployment Guide
 
-This guide will help you deploy the EVE Online Management Platform to production at `https://eveseat.tawfiqulbari.work`.
+**Server IP**: 217.216.111.197
+**Domain**: eveseat.tawfiqulbari.work
+**Traefik**: External (already running on ports 80/443)
+**SSL**: Let's Encrypt (email: tawfiqulbari@gmail.com)
+
+---
+
+## Table of Contents
+
+1. [Prerequisites](#prerequisites)
+2. [Initial Server Setup](#initial-server-setup)
+3. [Deployment Methods](#deployment-methods)
+   - [Method A: GitHub Actions (Recommended)](#method-a-github-actions-recommended)
+   - [Method B: Manual Deployment](#method-b-manual-deployment)
+4. [Post-Deployment](#post-deployment)
+5. [Troubleshooting](#troubleshooting)
+6. [Maintenance](#maintenance)
+
+---
 
 ## Prerequisites
 
-1. **Docker and Docker Compose** installed on the server
-2. **Traefik** running on the server with:
-   - Let's Encrypt certificate resolver configured (`le`)
-   - Entrypoint `websecure` for HTTPS (port 443)
-   - Network `traefik-proxy` created
-3. **DNS** configured to point `eveseat.tawfiqulbari.work` to your server's IP
-4. **EVE Online ESI Application** created at https://developers.eveonline.com/applications
+### On Your Server (217.216.111.197)
 
-## Step 1: Environment Configuration
+1. **Docker** installed
+   ```bash
+   docker --version  # Should be 20.10+
+   ```
 
-Create a `.env` file in the project root:
+2. **Docker Compose** installed
+   ```bash
+   docker-compose --version  # Should be 1.29+ or docker compose version 2.0+
+   ```
+
+3. **Traefik** running with external network
+   ```bash
+   docker network ls | grep traefik-proxy  # Should exist
+   docker ps | grep traefik  # Should be running
+   ```
+
+4. **Git** installed
+   ```bash
+   git --version
+   ```
+
+5. **Firewall** configured (ports 80, 443 open)
+   ```bash
+   sudo ufw status
+   ```
+
+### On Your Local Machine
+
+1. **SSH access** to server
+   ```bash
+   ssh root@217.216.111.197  # Using id_rsa key
+   ```
+
+2. **GitHub account** with repository access
+
+---
+
+## Initial Server Setup
+
+### 1. Create Deployment Directory
 
 ```bash
-cp .env.example .env
+# SSH into your server
+ssh root@217.216.111.197
+
+# Navigate to project directory
+cd /root/personal-projects/eve-online-app-1
+
+# If not yet cloned, create directory and clone
+# mkdir -p /root/personal-projects
+# cd /root/personal-projects
+# git clone https://github.com/TawfiqulBari/eveseat.git eve-online-app-1
+# cd eve-online-app-1
+```
+
+### 2. Create Environment File
+
+```bash
+# Copy the example environment file
+cp .env.production.example .env
+
+# Edit the file
 nano .env
 ```
 
-Required environment variables:
-
-```env
-# Database Configuration
-POSTGRES_USER=eve_user
-POSTGRES_PASSWORD=<strong_random_password>
-POSTGRES_DB=eve_db
-
-# Security Keys (Generate strong random keys)
-SECRET_KEY=<generate_with_openssl_rand_hex_32>
-ENCRYPTION_KEY=<generate_with_openssl_rand_hex_32>
-
-# EVE Online ESI Configuration
-ESI_CLIENT_ID=<your_esi_client_id>
-ESI_CLIENT_SECRET=<your_esi_client_secret>
-ESI_CALLBACK_URL=https://eveseat.tawfiqulbari.work/api/v1/auth/callback
-ESI_BASE_URL=https://esi.evetech.net/latest
-
-# Application Configuration
-DEBUG=False
-ALLOWED_ORIGINS=https://eveseat.tawfiqulbari.work
-CORS_ORIGINS=["https://eveseat.tawfiqulbari.work"]
-
-# Frontend Build Configuration
-VITE_API_URL=https://eveseat.tawfiqulbari.work/api/v1
-VITE_WS_URL=wss://eveseat.tawfiqulbari.work/ws
-
-# Optional: zKillboard
-ZKILL_REDISQ_QUEUE_ID=
-```
-
-### Generate Security Keys
+**IMPORTANT: Fill in these values:**
 
 ```bash
-# Generate SECRET_KEY
-openssl rand -hex 32
+# Required values:
+POSTGRES_PASSWORD=<generate-strong-password>
+SECRET_KEY=<generate-with: python -c "import secrets; print(secrets.token_urlsafe(32))">
+ENCRYPTION_KEY=<generate-with: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())">
 
-# Generate ENCRYPTION_KEY (must be 32 bytes base64-encoded for Fernet)
-python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+# EVE Online ESI credentials (from https://developers.eveonline.com/applications):
+ESI_CLIENT_ID=<your-esi-client-id>
+ESI_CLIENT_SECRET=<your-esi-client-secret>
+
+# Optional but recommended:
+ZKILL_REDISQ_QUEUE_ID=<generate-with: python -c "import uuid; print(str(uuid.uuid4()))">
 ```
 
-## Step 2: Verify Traefik Network
+Save and exit (`Ctrl+X`, then `Y`, then `Enter`).
 
-Ensure the Traefik network exists:
+### 3. Verify Traefik Network
 
 ```bash
+# Check if traefik-proxy network exists
 docker network ls | grep traefik-proxy
-```
 
-If it doesn't exist, create it:
-
-```bash
+# If it doesn't exist, create it:
 docker network create traefik-proxy
 ```
 
-## Step 3: Deploy the Application
+### 4. Verify Domain DNS
 
-### Option A: Using the Deployment Script
+Ensure `eveseat.tawfiqulbari.work` and `flower.eveseat.tawfiqulbari.work` point to `217.216.111.197`:
 
 ```bash
-./deploy.sh
+# Test DNS resolution
+nslookup eveseat.tawfiqulbari.work
+nslookup flower.eveseat.tawfiqulbari.work
+
+# Should both return 217.216.111.197
 ```
 
-### Option B: Manual Deployment
+---
+
+## Deployment Methods
+
+### Method A: GitHub Actions (Recommended)
+
+**Automated deployment on every push to main branch**
+
+#### Setup Steps:
+
+##### 1. Add Secrets to GitHub Repository
+
+Go to: `https://github.com/TawfiqulBari/eveseat/settings/secrets/actions`
+
+Click **"New repository secret"** and add:
+
+| Secret Name | Secret Value |
+|------------|-------------|
+| `SERVER_IP` | `217.216.111.197` |
+| `SSH_USER` | `root` |
+| `SSH_PRIVATE_KEY` | *Contents of your id_rsa file* |
+| `DEPLOYMENT_PATH` | `/root/personal-projects/eve-online-app-1` |
+
+To get your private key:
+```bash
+# On your local machine (where you have the key that connects to 217.216.111.197)
+cat ~/.ssh/id_rsa
+# Copy everything including "-----BEGIN OPENSSH PRIVATE KEY-----" and "-----END OPENSSH PRIVATE KEY-----"
+```
+
+##### 2. Deploy
 
 ```bash
-# Stop existing containers
+# On your local machine
+git push origin main
+
+# GitHub Actions will automatically:
+# 1. SSH into your server
+# 2. Pull latest code
+# 3. Rebuild containers
+# 4. Run database migrations
+# 5. Restart services
+```
+
+##### 3. Monitor Deployment
+
+- Check workflow: `https://github.com/TawfiqulBari/eveseat/actions`
+- Watch logs in real-time
+- Get notified of failures
+
+---
+
+### Method B: Manual Deployment
+
+**Traditional SSH deployment**
+
+#### Initial Deployment:
+
+```bash
+# SSH into server
+ssh root@217.216.111.197
+cd /root/personal-projects/eve-online-app-1
+
+# Pull latest code
+git pull origin main
+
+# Build and start services
 docker-compose down
-
-# Build images
 docker-compose build --no-cache
-
-# Start services
 docker-compose up -d
 
-# Check status
-docker-compose ps
+# Run database migrations
+docker-compose exec api alembic upgrade head
 
-# View logs
-docker-compose logs -f
+# Check service status
+docker-compose ps
 ```
 
-## Step 4: Database Migrations
-
-Run database migrations:
+#### Updating After Code Changes:
 
 ```bash
+# SSH into server
+ssh root@217.216.111.197
+cd /root/personal-projects/eve-online-app-1
+
+# Pull latest code
+git pull origin main
+
+# Rebuild and restart (minimal downtime)
+docker-compose up -d --build
+
+# Run new migrations (if any)
 docker-compose exec api alembic upgrade head
+
+# Check health
+curl https://eveseat.tawfiqulbari.work/api/v1/health
 ```
 
-## Step 5: Verify Deployment
+---
 
-1. **Check service health:**
-   ```bash
-   docker-compose ps
-   ```
+## Post-Deployment
 
-2. **Check logs:**
-   ```bash
-   docker-compose logs -f api
-   docker-compose logs -f frontend
-   ```
+### 1. Verify Services Are Running
 
-3. **Test endpoints:**
-   - Frontend: https://eveseat.tawfiqulbari.work
-   - API Health: https://eveseat.tawfiqulbari.work/api/v1/health
-   - API Docs: https://eveseat.tawfiqulbari.work/api/v1/docs
-   - Flower: https://flower.eveseat.tawfiqulbari.work
+```bash
+# Check all containers
+docker-compose ps
 
-## Service Architecture
+# Should show:
+# - eve-postgres (healthy)
+# - eve-redis (healthy)
+# - eve-api (running)
+# - eve-websocket (running)
+# - eve-worker (running)
+# - eve-scheduler (running)
+# - eve-flower (running)
+# - eve-frontend (running)
+```
 
-The application consists of:
+### 2. Check Application Health
 
-- **frontend**: React app served by Nginx
-- **api**: FastAPI backend
-- **websocket**: WebSocket server for real-time updates
-- **worker**: Celery worker for background tasks
-- **scheduler**: Celery Beat for scheduled tasks
-- **flower**: Celery monitoring UI
-- **postgres**: PostgreSQL database
-- **redis**: Redis cache and message broker
+```bash
+# Test API health endpoint
+curl https://eveseat.tawfiqulbari.work/api/v1/health
 
-## Traefik Routing
+# Should return:
+# {"status": "healthy", "database": "healthy"}
 
-Services are routed through Traefik:
+# Test frontend
+curl -I https://eveseat.tawfiqulbari.work
 
-- **Frontend**: `https://eveseat.tawfiqulbari.work/`
-- **API**: `https://eveseat.tawfiqulbari.work/api/v1/`
-- **WebSocket**: `wss://eveseat.tawfiqulbari.work/ws/`
-- **Flower**: `https://flower.eveseat.tawfiqulbari.work/`
+# Should return HTTP/2 200
+```
+
+### 3. Verify Traefik Routing
+
+```bash
+# Check if Traefik detects services (if you have access to Traefik dashboard)
+# Or test routes:
+
+curl -H "Host: eveseat.tawfiqulbari.work" http://localhost/
+curl -H "Host: eveseat.tawfiqulbari.work" http://localhost/api/v1/health
+```
+
+### 4. Check Logs
+
+```bash
+# View all logs
+docker-compose logs -f
+
+# View specific service logs
+docker-compose logs -f api
+docker-compose logs -f worker
+docker-compose logs -f frontend
+
+# Check for errors
+docker-compose logs | grep -i error
+```
+
+### 5. Access Monitoring
+
+- **Frontend**: https://eveseat.tawfiqulbari.work
+- **API Docs**: https://eveseat.tawfiqulbari.work/api/v1/docs
+- **Flower (Celery)**: https://flower.eveseat.tawfiqulbari.work
+
+### 6. Test EVE Online Login
+
+1. Go to https://eveseat.tawfiqulbari.work
+2. Click "Login with EVE Online"
+3. Authorize the application
+4. Verify successful login and character loading
+
+---
 
 ## Troubleshooting
 
-### Services won't start
+### Services Not Starting
 
-1. Check logs: `docker-compose logs [service-name]`
-2. Verify `.env` file exists and has all required variables
-3. Check Traefik network: `docker network inspect traefik-proxy`
-4. Verify DNS is pointing to the server
+```bash
+# Check for port conflicts
+sudo netstat -tulpn | grep LISTEN
 
-### SSL Certificate Issues
+# Note: EVE Seat uses NO host ports - all routing through Traefik
+# Only Traefik needs ports 80/443
 
-1. Check Traefik logs: `docker logs [traefik-container]`
-2. Verify Let's Encrypt resolver is configured in Traefik
-3. Ensure port 80 and 443 are open in firewall
+# Check Docker daemon
+sudo systemctl status docker
+
+# Restart Docker if needed
+sudo systemctl restart docker
+```
 
 ### Database Connection Issues
 
-1. Verify PostgreSQL is running: `docker-compose ps postgres`
-2. Check database credentials in `.env`
-3. Test connection: `docker-compose exec postgres psql -U eve_user -d eve_db`
+```bash
+# Check PostgreSQL logs
+docker-compose logs postgres | tail -50
 
-### Frontend Not Loading
+# Test database connection
+docker-compose exec postgres psql -U eve_user -d eve_db -c "SELECT 1;"
 
-1. Check frontend logs: `docker-compose logs frontend`
-2. Verify build completed: `docker-compose exec frontend ls -la /usr/share/nginx/html`
-3. Check Traefik labels on frontend service
+# Check database exists
+docker-compose exec postgres psql -U eve_user -l
+```
+
+### Migration Errors
+
+```bash
+# Check migration status
+docker-compose exec api alembic current
+
+# View migration history
+docker-compose exec api alembic history
+
+# Rollback one migration
+docker-compose exec api alembic downgrade -1
+
+# Re-run migrations
+docker-compose exec api alembic upgrade head
+
+# Force rebuild if schema is corrupt (DESTRUCTIVE)
+# WARNING: This deletes all data!
+docker-compose down -v  # Removes volumes
+docker volume rm eveseat_postgres_data eveseat_redis_data
+docker-compose up -d
+docker-compose exec api alembic upgrade head
+```
+
+### Traefik Not Routing
+
+```bash
+# Check if containers are on traefik-proxy network
+docker network inspect traefik-proxy | grep eve-
+
+# Verify container labels
+docker inspect eve-frontend --format '{{json .Config.Labels}}' | python3 -m json.tool
+docker inspect eve-api --format '{{json .Config.Labels}}' | python3 -m json.tool
+
+# Restart services
+docker-compose restart frontend api websocket
+
+# Restart Traefik (find your Traefik container name first)
+docker ps | grep traefik
+docker restart <traefik-container-name>
+```
+
+### SSL Certificate Issues
+
+```bash
+# Check Traefik logs for certificate errors
+docker logs <traefik-container-name> | grep -i cert
+
+# Common issues:
+# 1. DNS not pointing to server → Fix DNS
+# 2. Port 80 blocked → Open firewall
+# 3. Rate limit hit → Wait 1 hour, use staging LE
+
+# Force certificate renewal (in Traefik config)
+# Delete certificate and restart Traefik
+```
+
+### 502 Bad Gateway
+
+```bash
+# Service is not responding - check if it's running
+docker-compose ps
+
+# Check service logs
+docker-compose logs api
+docker-compose logs frontend
+
+# Restart the service
+docker-compose restart api
+
+# Check service health internally
+docker-compose exec api curl http://localhost:8000/health
+```
+
+### WebSocket Connection Fails
+
+```bash
+# Check WebSocket service
+docker-compose logs websocket
+
+# Test WebSocket internally
+docker-compose exec websocket curl http://localhost:8001/health
+
+# Verify Traefik WebSocket routing
+# Check browser console for WebSocket errors
+```
+
+### High Resource Usage
+
+```bash
+# Check resource usage
+docker stats
+
+# If worker is using too much CPU/memory:
+# Reduce concurrency in docker-compose.yml:
+# command: celery -A app.tasks worker --loglevel=info --concurrency=2
+
+# If PostgreSQL is using too much memory:
+# Adjust PostgreSQL config in .env
+```
+
+---
 
 ## Maintenance
 
 ### View Logs
 
 ```bash
-# All services
+# Real-time logs (all services)
 docker-compose logs -f
 
-# Specific service
-docker-compose logs -f api
-docker-compose logs -f worker
+# Last 100 lines from specific service
+docker-compose logs --tail=100 api
+
+# Logs since specific time
+docker-compose logs --since=2h api
+
+# Save logs to file
+docker-compose logs > eveseat_logs_$(date +%Y%m%d).txt
 ```
 
-### Restart Services
+### Database Backup
 
 ```bash
-# Restart all
-docker-compose restart
+# Create backup
+docker-compose exec postgres pg_dump -U eve_user eve_db > backup_$(date +%Y%m%d_%H%M%S).sql
 
-# Restart specific service
-docker-compose restart api
+# Create compressed backup
+docker-compose exec postgres pg_dump -U eve_user eve_db | gzip > backup_$(date +%Y%m%d_%H%M%S).sql.gz
+
+# Restore from backup
+docker-compose exec -T postgres psql -U eve_user eve_db < backup_20250115_120000.sql
 ```
 
 ### Update Application
 
 ```bash
 # Pull latest code
-git pull
+cd /root/personal-projects/eve-online-app-1
+git pull origin main
 
 # Rebuild and restart
-docker-compose build --no-cache
+docker-compose up -d --build
+
+# Run new migrations
+docker-compose exec api alembic upgrade head
+
+# Verify health
+curl https://eveseat.tawfiqulbari.work/api/v1/health
+```
+
+### Clean Up Docker Resources
+
+```bash
+# Remove unused containers
+docker container prune -f
+
+# Remove unused images
+docker image prune -a -f
+
+# Remove unused volumes (CAREFUL - this can delete data)
+docker volume prune -f
+
+# Remove unused networks
+docker network prune -f
+
+# Full cleanup (CAREFUL)
+docker system prune -a --volumes -f
+```
+
+### Monitor Celery Tasks
+
+Access Flower dashboard:
+```
+https://flower.eveseat.tawfiqulbari.work
+```
+
+Or via CLI:
+```bash
+# List active tasks
+docker-compose exec worker celery -A app.tasks inspect active
+
+# List scheduled tasks
+docker-compose exec scheduler celery -A app.tasks inspect scheduled
+
+# View task stats
+docker-compose exec worker celery -A app.tasks inspect stats
+```
+
+### Update Environment Variables
+
+```bash
+# Edit .env file
+nano .env
+
+# Restart services to apply changes
+docker-compose down
 docker-compose up -d
 
-# Run migrations if needed
-docker-compose exec api alembic upgrade head
+# Or restart specific service
+docker-compose restart api
 ```
 
-### Backup Database
+---
 
-```bash
-docker-compose exec postgres pg_dump -U eve_user eve_db > backup_$(date +%Y%m%d_%H%M%S).sql
-```
+## Security Checklist
 
-### Restore Database
+- [ ] Strong PostgreSQL password set
+- [ ] SECRET_KEY is random and secure
+- [ ] ENCRYPTION_KEY is properly generated
+- [ ] ESI credentials are kept secret
+- [ ] Firewall configured (only 22, 80, 443 open)
+- [ ] SSH key authentication enabled (password auth disabled)
+- [ ] Regular backups configured
+- [ ] Traefik SSL certificates working (Let's Encrypt)
+- [ ] Debug mode disabled (DEBUG=False)
+- [ ] CORS origins properly configured
 
-```bash
-docker-compose exec -T postgres psql -U eve_user eve_db < backup_file.sql
-```
+---
 
-## Security Notes
+## Network & Port Configuration
 
-1. **Never commit `.env` file** to version control
-2. **Use strong passwords** for database and security keys
-3. **Keep dependencies updated**: `docker-compose build --no-cache`
-4. **Monitor logs** for suspicious activity
-5. **Regular backups** of database
+**NO Port Conflicts!** All services use internal Docker networking:
+
+- PostgreSQL: Internal only (no host port)
+- Redis: Internal only (no host port)
+- API: Internal port 8000 (routed via Traefik)
+- WebSocket: Internal port 8001 (routed via Traefik)
+- Flower: Internal port 5555 (routed via Traefik)
+- Frontend: Internal port 80 (routed via Traefik)
+
+**Only Traefik** uses host ports 80/443 (already running externally).
+
+---
 
 ## Support
 
-For issues or questions, check:
-- Application logs: `docker-compose logs`
-- Traefik dashboard: Check your Traefik configuration
-- EVE ESI status: https://status.eveonline.com/
+### Documentation
+- GitHub: https://github.com/TawfiqulBari/eveseat
+- EVE ESI Docs: https://docs.esi.evetech.net/
+- Traefik Docs: https://doc.traefik.io/traefik/
 
+### Logs Location
+- Application: `docker-compose logs`
+- Traefik: `docker logs <traefik-container>`
+- System: `/var/log/syslog`
+
+### Health Check URLs
+- API: https://eveseat.tawfiqulbari.work/api/v1/health
+- Frontend: https://eveseat.tawfiqulbari.work
+- Flower: https://flower.eveseat.tawfiqulbari.work
+
+---
+
+**Deployment Complete!** 🚀
+
+Access your application at: **https://eveseat.tawfiqulbari.work**
