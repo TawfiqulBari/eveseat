@@ -331,3 +331,23 @@ class EventPublisher:
 
 # Global event publisher instance
 event_publisher = EventPublisher()
+
+
+# Convenience function for publishing events
+def publish_event(
+    channel: str,
+    event_type: EventType,
+    data: Dict[str, Any],
+) -> bool:
+    """
+    Convenience function to publish an event using the global publisher
+
+    Args:
+        channel: Redis channel name
+        event_type: Event type
+        data: Event data
+
+    Returns:
+        True if published successfully
+    """
+    return event_publisher.publish(channel, event_type, data)
